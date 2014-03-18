@@ -3,7 +3,6 @@ Python-Rightscale
 
 A stupid wrapper around rightscale's HTTP API
 """
-
 import requests
 import json
 import time
