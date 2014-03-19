@@ -12,7 +12,7 @@ Usage examples
 **Setting up your auth token**
 
 ```
-import rightscale
+from rightscale import rightscale
 api = rightscale('account#','refreshtoken','oauth-endpoint')
 api.login()
 ```

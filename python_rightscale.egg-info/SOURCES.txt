@@ -1,0 +1,10 @@
+MANIFEST.in
+README
+setup.py
+python_rightscale.egg-info/PKG-INFO
+python_rightscale.egg-info/SOURCES.txt
+python_rightscale.egg-info/dependency_links.txt
+python_rightscale.egg-info/requires.txt
+python_rightscale.egg-info/top_level.txt
+rightscale/__init__.py
+rightscale/rightscale.py

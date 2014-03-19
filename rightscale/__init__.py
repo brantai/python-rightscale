@@ -1,1 +1,2 @@
-import rightscale
+from . import rightscale
+from rightscale import rightscale
