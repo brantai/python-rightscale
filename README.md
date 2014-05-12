@@ -13,7 +13,7 @@ Usage examples
 
 ```
 from rightscale import rightscale
-api = rightscale('account#','refreshtoken','oauth-endpoint')
+api = rightscale('account#','refreshtoken',oauth_endpoint='oauth-endpoint',api_endpoint='oauth-endpoint')
 api.login()
 ```
 
