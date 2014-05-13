@@ -7,62 +7,63 @@ import requests
 import json
 import time
 
-def _get(url,headers,params):
+def _get(url,headers,payload=None):
 	"""
 	Internal method to make HTTP GET requests
 	"""
-	response = requests.get(url, headers=headers, params=params)
+	if payload:
+		response = requests.get(url,headers=headers,data=payload)
+	else:
+	        response = requests.get(url, headers=headers)
 	output = response.json()
 	return output
 
-def _post(url,headers,params,payload=None):
+def _post(url,headers,payload=None):
 	"""
 	Internal method to make HTTP POST requests
 	"""
 	if payload:
-		response = requests.post(url,data=payload,headers=headers,params=params)
+		response = requests.post(url,data=payload,headers=headers)
 	else:
-		response = requests.post(url,headers=headers,params=params)
+		response = requests.post(url,headers=headers)
 	return response
 
-def _verify(v_url,headers,params):
+def _verify(v_url,headers):
 	"""
 	Internal method to return the progress of an API call until it is completed
 	"""
 	status = 'unknown'
-	v = _get(v_url,headers,params)
+	v = _get(v_url,headers)
 	while status != 'completed':
 		time.sleep(5)
-		v = _get(v_url,headers,params)
+		v = _get(v_url,headers)
 	        status = v['state']
 		print status
 	return v
 
 class rightscale:
-    def __init__(self, account, refresh_token, api_endpoint='my', oauth_endpoint='my', api_level='1.0'):
+    def __init__(self, account, refresh_token, api_endpoint='my', oauth_endpoint='my',cloud_id='1'):
 	    """
 	    Creates and configures the API object.
 	    :param account: The Rightscale account number
 	    :param refresh_token: The refresh token provided by Rightscale when API access is enabled.
 	    :param api_endpoint: The rightscale subdomain to be hit with API requests.  Defaults to 'my'.
 	    :param oauth_endpoint: The rightscale subdomain to be hit with OAuth token requests.  Defaults to 'my'.
-	    :param api_level: The rightscale api level for requests.  Currently defaults to '1.0' because 1.5 support isn't here yet.
 	    """
 	    self.account = account
-	    self.oauth_url = 'https://%s.rightscale.com/api/acct/%s/oauth2' % (oauth_endpoint, account)
+	    self.oauth_url = 'https://%s.rightscale.com/api/oauth2' % (oauth_endpoint)
 	    self.refresh_token = refresh_token
 	    self.api_url = 'https://%s.rightscale.com/api/' % (api_endpoint)
-	    self.api_level = api_level
             self.auth_token = None
-	    self.headers = {'X-API-Version': self.api_level}
-	    self.url_params = {'format': 'js'}
+	    self.headers = {'X-API-Version': '1.5'}
+	    self.cloud_id=cloud_id
 
     def login(self):
 	    """
 	    Gets and stores an OAUTH token from Rightscale.
 	    """
 	    login_data = {'grant_type': 'refresh_token', 'refresh_token': self.refresh_token}
-	    response = requests.post(self.oauth_url, headers=self.headers, params=self.url_params, data=login_data)
+	    response = requests.post(self.oauth_url, headers=self.headers, data=login_data)
 
 	    if response.status_code == requests.codes.ok:
 		    raw_token = response.json()
@@ -80,15 +81,18 @@ class rightscale:
 	    :param script_id: the id of the Rightscript to run on the server, taken from the url of the rightscript
 	    :param inputs (optional): a dict of the inputs to pass to the rightscript, in the format 'INPUT NAME': 'text:Value'
 	    """
-	    api_request = self.api_url + 'acct/%s/servers/%s/run_script' % (self.account,server_id) 
-            script_href = '%sacct/%s/right_script/%s' % (self.api_url,self.account,script_id)
+	    api_request = self.api_url + 'cloud/%s/instances/%s/run_executable' % (self.cloud_id,server_id) 
+            script_href = '/api/right_script/%s' % (script_id)
 	    payload = {}
-	    payload['server[right_script_href]'] = script_href
+	    payload['right_script_href'] = script_href
+	    input_list = []
 	    if inputs:
 	        for key in inputs:
-		        payload['server[parameters]['+key+']'] = inputs[key]
-	    response = _post(api_request, self.headers,self.url_params,payload)
-	    _verify(response.headers['location'],self.headers,self.url_params)
+		        input_list.append('[name]='+key)
+			input_list.append('[value]'+inputs[key])
+		payload['inputs[]'] = input_list
+	    response = _post(api_request, self.headers,payload)
+#	    _verify(response.headers['location'],self.headers)
 	    return response
 		    
 
@@ -102,15 +106,34 @@ class rightscale:
 	    """
 	    api_request=self.api_url + uri
 	    if method.lower() == 'get':
-		    response = _get(api_request,self.headers,self.url_params)
+		    response = _get(api_request,self.headers)
             elif method.lower() == 'post':
 		    if payload:
-		        response = _post(uri,self.headers,self.url_params,payload)
+		        response = _post(api_request,self.headers,payload)
 		    else:
-			response = _post(uri,self.headers,self.url_params)
+			response = _post(api_request,self.headers)
 	    
 	            if verify and response.headers['location']:
-			_verify(response.headers['location'],self.headers,self.url_params)
+			_verify(response.headers['location'],self.headers)
 	    
 	    return response
+    
+    def list_instances(self,deployment=None):
+	    """
+	    Returns a list of instances from your account.
+	    :param deployment (optional): If provided, only lists servers in the specified deployment
+	    """
+	    if deployment:
+	        search_filter = ['state==operational','deployment_href==/api/deployments/'+deployment]
+		payload = { 'filter[]': search_filter}
+	    else:
+	        payload={'filter[]': 'state==operational'}
+	    api_request=self.api_url+'clouds/'+self.cloud+'/instances'
+            response = _get(api_request,self.headers,payload=payload)
+	    instance_list = {}
+	    for svr in response:
+		   instance_list[svr['resource_uid']] = svr
+
+            return instance_list
+
 
