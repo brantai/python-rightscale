@@ -11,12 +11,8 @@ def _get(url, headers, payload=None):
     """
     Internal method to make HTTP GET requests
     """
-    if payload:
-        response = requests.get(url, headers=headers, data=payload)
-    else:
-        response = requests.get(url, headers=headers)
-    output = response.json()
-    return output
+    response = requests.get(url, headers=headers, data=payload)
+    return response.json()
 
 
 def _post(url, headers, payload=None):
