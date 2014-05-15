@@ -1,2 +1,1 @@
-from . import rightscale
-from rightscale import rightscale
+from .rightscale import RightScale
