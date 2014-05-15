@@ -138,7 +138,7 @@ class RightScale(RESTOAuthClient):
         response = self.post(api_request, payload)
         return response
 
-    def list_instances(self, deployment=None):
+    def list_instances(self, deployment=None, view='tiny'):
         """
         Returns a list of instances from your account.
 
@@ -150,7 +150,7 @@ class RightScale(RESTOAuthClient):
             filters.append(
                     'deployment_href==/api/deployments/' + deployment
                     )
-        params = {'filter[]': filters}
+        params = {'filter[]': filters, 'view': view}
         api_request = 'clouds/%s/instances' % self.cloud_id
         response = self.get(api_request, params=params)
         # TODO: return something more meaningful once we know what format it
