@@ -13,7 +13,7 @@ class RESTOAuthClient(object):
     """
     def __init__(self):
         self.endpoint = ''
-        self.headers = {}
+        self.headers = {'Accept': 'application/json'}
 
         # convenience methods
         self.get = partial(self.request, 'get')
