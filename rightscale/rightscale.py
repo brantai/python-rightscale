@@ -61,7 +61,7 @@ class RESTOAuthClient(object):
         return r
 
 
-class RightScale(RESTOAuthClient):
+class RightScale(object):
     def __init__(
             self,
             account,
@@ -80,36 +80,42 @@ class RightScale(RESTOAuthClient):
         :param oauth_endpoint: The rightscale subdomain to be hit with OAuth
             token requests.  Defaults to 'us-3'.
         """
-        super(RightScale, self).__init__()
-        self.headers['X-API-Version'] = '1.5'
-        self.endpoint = 'https://%s.rightscale.com/api/' % api_endpoint
-
         self.account = account
+        self.api_endpoint = 'https://%s.rightscale.com/api/' % api_endpoint
         self.oauth_url = (
                 'https://%s.rightscale.com/api/oauth2/'
                 % oauth_endpoint
                 )
         self.refresh_token = refresh_token
         self.auth_token = None
+        self._client = None
         self.cloud_id = cloud_id
+
+    @property
+    def client(self):
+        if not self._client:
+            self.login()
+        return self._client
 
     def login(self):
         """
         Gets and stores an OAUTH token from Rightscale.
         """
+        client = RESTOAuthClient()
+        client.endpoint = self.api_endpoint
+        client.headers['X-API-Version'] = '1.5'
         login_data = {
                 'grant_type': 'refresh_token',
                 'refresh_token': self.refresh_token,
                 }
-        response = self.post(url=self.oauth_url, data=login_data)
+        response = client.post(url=self.oauth_url, data=login_data)
+        if not response.ok:
+            response.raise_for_status()
 
-        if response.ok:
-            raw_token = response.json()
-            self.auth_token = "Bearer %s" % raw_token['access_token']
-            self.headers['Authorization'] = self.auth_token
-            return True
-
-        return False
+        raw_token = response.json()
+        self.auth_token = "Bearer %s" % raw_token['access_token']
+        client.headers['Authorization'] = self.auth_token
+        self._client = client
 
     def run_script(self, server_id, script_id, inputs=None):
         """
@@ -135,7 +141,7 @@ class RightScale(RESTOAuthClient):
                 input_list.append('[name]=' + key)
             input_list.append('[value]' + inputs[key])
             payload['inputs[]'] = input_list
-        response = self.post(api_request, payload)
+        response = self.client.post(api_request, payload)
         return response
 
     def list_instances(self, deployment=None, view='tiny'):
@@ -152,10 +158,10 @@ class RightScale(RESTOAuthClient):
                     )
         params = {'filter[]': filters, 'view': view}
         api_request = 'clouds/%s/instances' % self.cloud_id
-        response = self.get(api_request, params=params)
+        response = self.client.get(api_request, params=params)
         # TODO: return something more meaningful once we know what format it
         # comes back in.
-        return response
+        return response.json()
         # instance_list = {}
         # for svr in response:
         #     instance_list[svr['resource_uid']] = svr
