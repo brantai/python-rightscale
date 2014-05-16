@@ -9,6 +9,7 @@ from .util import get_rc_creds
 
 DEFAULT_API_ENDPOINT = 'https://us-3.rightscale.com'
 DEFAULT_API_PREPATH = '/api/'
+ROOT_RES_PATH = DEFAULT_API_PREPATH + 'sessions'
 
 
 class RightScale(object):
@@ -42,7 +43,7 @@ class RightScale(object):
 
     @property
     def links(self):
-        response = self.client.get('sessions')
+        response = self.client.get(ROOT_RES_PATH)
         if not response.ok:
             return {}
         # TODO: debug log the raw
