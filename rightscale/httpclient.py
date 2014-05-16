@@ -75,3 +75,14 @@ class RESTOAuthClient(object):
                     (raw['rel'], raw['href']) for raw in blob.get('links', [])
                     )
         return self._links
+
+    def __getattr__(self, name):
+        if name not in self.links:
+            raise AttributeError('%s object has no attribute %s' % (
+                self.__class__.__name__,
+                name,
+                ))
+        path = self.links[name]
+        response = self.get(path)
+        # TODO: construct appropriate objects based on content-type
+        return response.json()
