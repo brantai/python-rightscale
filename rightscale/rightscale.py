@@ -46,6 +46,15 @@ class RightScale(object):
             self.login()
         return self._client
 
+    @property
+    def links(self):
+        response = self.client.get('sessions')
+        if not response.ok:
+            return {}
+        # TODO: debug log the raw
+        blob = response.json()
+        return dict((raw['rel'], raw['href']) for raw in blob.get('links', []))
+
     def login(self):
         """
         Gets and stores an OAUTH token from Rightscale.
