@@ -6,6 +6,8 @@ A stupid wrapper around rightscale's HTTP API
 from functools import partial
 import requests
 
+from .util import get_rc_creds
+
 
 class RESTOAuthClient(object):
     """
@@ -64,17 +66,17 @@ class RESTOAuthClient(object):
 class RightScale(object):
     def __init__(
             self,
-            account,
-            refresh_token,
+            account='',
+            refresh_token=None,
             api_endpoint='my',
             oauth_endpoint='us-3',
             cloud_id='1'
             ):
         """
         Creates and configures the API object.
-        :param account: The Rightscale account number
-        :param refresh_token: The refresh token provided by Rightscale when API
-            access is enabled.
+        :param str account: The Rightscale account number
+        :param str refresh_token: The refresh token provided by Rightscale when
+            API access is enabled.
         :param api_endpoint: The rightscale subdomain to be hit with API
             requests.  Defaults to 'my'.
         :param oauth_endpoint: The rightscale subdomain to be hit with OAuth
@@ -86,7 +88,8 @@ class RightScale(object):
                 'https://%s.rightscale.com/api/oauth2/'
                 % oauth_endpoint
                 )
-        self.refresh_token = refresh_token
+        if refresh_token is not None:
+            self.refresh_token = refresh_token
         self.auth_token = None
         self._client = None
         self.cloud_id = cloud_id
@@ -101,12 +104,24 @@ class RightScale(object):
         """
         Gets and stores an OAUTH token from Rightscale.
         """
+        if hasattr(self, 'refresh_token'):
+            # when specified to the constructor, take the user at its word.
+            # don't try to fall back to the rc file because they may be trying
+            # to login to a different account and we don't want to surprise
+            # them.  if they passed in None, shame on them.
+            refresh_token = self.refresh_token
+        else:
+            rc_creds = get_rc_creds()
+            refresh_token = rc_creds[1]
+        if not refresh_token:
+            raise ValueError("Can't login. Need refresh token!")
+
         client = RESTOAuthClient()
         client.endpoint = self.api_endpoint
         client.headers['X-API-Version'] = '1.5'
         login_data = {
                 'grant_type': 'refresh_token',
-                'refresh_token': self.refresh_token,
+                'refresh_token': refresh_token,
                 }
         response = client.post(url=self.oauth_url, data=login_data)
         if not response.ok:
