@@ -6,8 +6,8 @@ class RESTOAuthClient(object):
     """
     HTTP client that is aware of REST and OAuth semantics.
     """
-    def __init__(self):
-        self.endpoint = ''
+    def __init__(self, endpoint=''):
+        self.endpoint = endpoint
         self.headers = {'Accept': 'application/json'}
 
         # convenience methods

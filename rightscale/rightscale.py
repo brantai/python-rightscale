@@ -7,16 +7,15 @@ from .httpclient import RESTOAuthClient
 from .util import get_rc_creds
 
 
+DEFAULT_API_ENDPOINT = 'https://us-3.rightscale.com'
+DEFAULT_API_PREPATH = '/api/'
 
 
 class RightScale(object):
     def __init__(
             self,
-            account='',
             refresh_token=None,
-            api_endpoint='my',
-            oauth_endpoint='us-3',
-            cloud_id='1'
+            api_endpoint=DEFAULT_API_ENDPOINT,
             ):
         """
         Creates and configures the API object.
@@ -28,17 +27,12 @@ class RightScale(object):
         :param oauth_endpoint: The rightscale subdomain to be hit with OAuth
             token requests.  Defaults to 'us-3'.
         """
-        self.account = account
-        self.api_endpoint = 'https://%s.rightscale.com/api/' % api_endpoint
-        self.oauth_url = (
-                'https://%s.rightscale.com/api/oauth2/'
-                % oauth_endpoint
-                )
+        self.api_endpoint = api_endpoint
+        self.oauth_url = api_endpoint + DEFAULT_API_PREPATH + 'oauth2'
         if refresh_token is not None:
             self.refresh_token = refresh_token
         self.auth_token = None
         self._client = None
-        self.cloud_id = cloud_id
 
     @property
     def client(self):
@@ -71,8 +65,7 @@ class RightScale(object):
         if not refresh_token:
             raise ValueError("Can't login. Need refresh token!")
 
-        client = RESTOAuthClient()
-        client.endpoint = self.api_endpoint
+        client = RESTOAuthClient(self.api_endpoint)
         client.headers['X-API-Version'] = '1.5'
         login_data = {
                 'grant_type': 'refresh_token',
@@ -127,7 +120,8 @@ class RightScale(object):
                     'deployment_href==/api/deployments/' + deployment
                     )
         params = {'filter[]': filters, 'view': view}
-        api_request = 'clouds/%s/instances' % self.cloud_id
+        # TODO: replace with cloud id discovered from self.links
+        api_request = DEFAULT_API_PREPATH + 'clouds/1/instances'
         response = self.client.get(api_request, params=params)
         # TODO: return something more meaningful once we know what format it
         # comes back in.
