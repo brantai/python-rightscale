@@ -7,6 +7,7 @@ from .httpclient import RESTOAuthClient
 from .util import get_rc_creds
 
 
+# magic strings from the 1.5 api
 DEFAULT_API_ENDPOINT = 'https://us-3.rightscale.com'
 DEFAULT_API_PREPATH = '/api/'
 ROOT_RES_PATH = DEFAULT_API_PREPATH + 'sessions'
@@ -41,15 +42,6 @@ class RightScale(object):
             self.login()
         return self._client
 
-    @property
-    def links(self):
-        response = self.client.get(ROOT_RES_PATH)
-        if not response.ok:
-            return {}
-        # TODO: debug log the raw
-        blob = response.json()
-        return dict((raw['rel'], raw['href']) for raw in blob.get('links', []))
-
     def login(self):
         """
         Gets and stores an OAUTH token from Rightscale.
@@ -66,7 +58,7 @@ class RightScale(object):
         if not refresh_token:
             raise ValueError("Can't login. Need refresh token!")
 
-        client = RESTOAuthClient(self.api_endpoint)
+        client = RESTOAuthClient(self.api_endpoint, ROOT_RES_PATH)
         client.headers['X-API-Version'] = '1.5'
         login_data = {
                 'grant_type': 'refresh_token',

@@ -2,17 +2,23 @@ from functools import partial
 import requests
 
 
+DEFAULT_ROOT_RES_PATH = '/'
+
+
 class RESTOAuthClient(object):
     """
     HTTP client that is aware of REST and OAuth semantics.
     """
-    def __init__(self, endpoint=''):
+    def __init__(self, endpoint='', root_path=DEFAULT_ROOT_RES_PATH):
         self.endpoint = endpoint
+        self.root_path = root_path
         self.headers = {'Accept': 'application/json'}
 
         # convenience methods
         self.get = partial(self.request, 'get')
         self.post = partial(self.request, 'post')
+
+        self.reset_cache()
 
     def request(self, method, path='/', url=None, ignore_codes=[], **kwargs):
         """
@@ -54,3 +60,18 @@ class RESTOAuthClient(object):
         if not r.ok and r.status_code not in ignore_codes:
             r.raise_for_status()
         return r
+
+    def reset_cache(self):
+        self._links = None
+
+    @property
+    def links(self):
+        if self._links is None:
+            response = self.get(self.root_path)
+            if not response.ok:
+                return {}
+            blob = response.json()
+            self._links = dict(
+                    (raw['rel'], raw['href']) for raw in blob.get('links', [])
+                    )
+        return self._links
