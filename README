@@ -19,11 +19,6 @@ api = rightscale.RightScale(refresh_token='token',api_endpoint='api-endpoint')
 refreshtoken is the refresh token issued to you when you enabled api access.
 api_endpoint is the FQDN of "Token Endpoint (API 1.5)" from the same page.
 
-**Running a rightscript on a single server**
-
-```
-payload = { 'SYS_TZINFO': 'text:US/Pacific'}
-
 **Getting a list of all servers**
 
 ```
