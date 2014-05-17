@@ -6,9 +6,11 @@ DEFAULT_ROOT_RES_PATH = '/'
 
 
 class RESTOAuthClient(object):
+
     """
     HTTP client that is aware of REST and OAuth semantics.
     """
+
     def __init__(self, endpoint='', root_path=DEFAULT_ROOT_RES_PATH):
         self.endpoint = endpoint
         self.root_path = root_path
@@ -72,8 +74,8 @@ class RESTOAuthClient(object):
                 return {}
             blob = response.json()
             self._links = dict(
-                    (raw['rel'], raw['href']) for raw in blob.get('links', [])
-                    )
+                (raw['rel'], raw['href']) for raw in blob.get('links', [])
+                )
         return self._links
 
     def __getattr__(self, name):

@@ -19,6 +19,7 @@ ACCOUNT_INFO_RES_PATH = DEFAULT_API_PREPATH + 'sessions/accounts'
 
 
 class RightScale(object):
+
     def __init__(
             self,
             refresh_token=None,
@@ -66,9 +67,9 @@ class RightScale(object):
         client = RESTOAuthClient(self.api_endpoint, ROOT_RES_PATH)
         client.headers['X-API-Version'] = '1.5'
         login_data = {
-                'grant_type': 'refresh_token',
-                'refresh_token': refresh_token,
-                }
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+            }
         response = client.post(url=self.oauth_url, data=login_data)
         if not response.ok:
             response.raise_for_status()
@@ -91,9 +92,9 @@ class RightScale(object):
             rightscript, in the format 'INPUT NAME': 'text:Value'
         """
         api_request = 'cloud/%s/instances/%s/run_executable' % (
-                self.cloud_id,
-                server_id,
-                )
+            self.cloud_id,
+            server_id,
+            )
         script_href = '/api/right_script/%s' % (script_id)
         payload = {'right_script_href': script_href}
         input_list = []
@@ -115,8 +116,8 @@ class RightScale(object):
         filters = ['state==operational']
         if deployment:
             filters.append(
-                    'deployment_href==/api/deployments/' + deployment
-                    )
+                'deployment_href==/api/deployments/' + deployment
+                )
         params = {'filter[]': filters, 'view': view}
         # TODO: replace with cloud id discovered from self.links
         api_request = DEFAULT_API_PREPATH + 'clouds/1/instances'
