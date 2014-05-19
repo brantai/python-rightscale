@@ -7,4 +7,6 @@ python_rightscale.egg-info/dependency_links.txt
 python_rightscale.egg-info/requires.txt
 python_rightscale.egg-info/top_level.txt
 rightscale/__init__.py
+rightscale/httpclient.py
 rightscale/rightscale.py
+rightscale/util.py
