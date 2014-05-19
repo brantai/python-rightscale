@@ -74,6 +74,7 @@ class RightScale(object):
             refresh_token = rc_creds[1]
         if not refresh_token:
             raise ValueError("Can't login. Need refresh token!")
+        self.refresh_token = refresh_token
 
         if hasattr(self, 'api_endpoint'):
             api_endpoint = self.api_endpoint
@@ -83,9 +84,10 @@ class RightScale(object):
 
         if not api_endpoint:
             raise ValueError("Can't login with no api endpoint.")
+        self.api_endpoint = api_endpoint
 
         self.oauth_url = api_endpoint + DEFAULT_API_PREPATH + 'oauth2'
-        client = RESTOAuthClient(self.api_endpoint, ROOT_RES_PATH, REST_HINTS)
+        client = RESTOAuthClient(api_endpoint, ROOT_RES_PATH, REST_HINTS)
         client.headers['X-API-Version'] = '1.5'
         login_data = {
             'grant_type': 'refresh_token',
