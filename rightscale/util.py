@@ -27,8 +27,14 @@ def get_rc_creds():
     try:
         config.read(rc_file)
         return (
+<<<<<<< HEAD
                 config.get(CFG_SECTION_OAUTH, CFG_OPTION_ENDPOINT),
                 config.get(CFG_SECTION_OAUTH, CFG_OPTION_REF_TOKEN),
                 )
+=======
+            config.get(CFG_SECTION_OAUTH, CFG_OPTION_ACCT),
+            config.get(CFG_SECTION_OAUTH, CFG_OPTION_REF_TOKEN),
+            )
+>>>>>>> b73f2326c20f31675d1a34272386e333e9246cc7
     except:
         return ('', '')

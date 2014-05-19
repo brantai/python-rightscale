@@ -11,6 +11,11 @@ from .util import get_rc_creds
 DEFAULT_API_PREPATH = '/api/'
 ROOT_RES_PATH = DEFAULT_API_PREPATH + 'sessions'
 
+# this *should* be discoverable from the '/api/sessions' route above, but it is
+# not.  there is an open ticket filed with rightscale.  until it gets
+# addressed, it's another piece of magic:
+ACCOUNT_INFO_RES_PATH = DEFAULT_API_PREPATH + 'sessions/accounts'
+
 
 class RightScale(object):
 
@@ -131,3 +136,10 @@ class RightScale(object):
         # for svr in response:
         #     instance_list[svr['resource_uid']] = svr
         # return instance_list
+
+    def get_accounts(self):
+        """
+        Returns the RightScale accounts available using the login creds
+        for the API call.
+        """
+        return self.client.get(ACCOUNT_INFO_RES_PATH).json()
