@@ -16,6 +16,20 @@ ROOT_RES_PATH = DEFAULT_API_PREPATH + 'sessions'
 # addressed, it's another piece of magic:
 ACCOUNT_INFO_RES_PATH = DEFAULT_API_PREPATH + 'sessions/accounts'
 
+# In theory, RightScale's API is discoverable through ``links`` in responses.
+# In practice, we have to help our robots along with the following hints:
+REST_HINTS = {
+        # using unicodes below just to be consistent with what is discovered
+        # directly from the http requests
+        'add': {
+            u'sessions.accounts': unicode(ACCOUNT_INFO_RES_PATH),
+            },
+        'remove': [
+            u'accounts.index',
+            u'self'
+            ],
+        }
+
 
 class RightScale(object):
 
@@ -71,7 +85,7 @@ class RightScale(object):
             raise ValueError("Can't login with no api endpoint.")
 
         self.oauth_url = api_endpoint + DEFAULT_API_PREPATH + 'oauth2'
-        client = RESTOAuthClient(api_endpoint, ROOT_RES_PATH)
+        client = RESTOAuthClient(self.api_endpoint, ROOT_RES_PATH, REST_HINTS)
         client.headers['X-API-Version'] = '1.5'
         login_data = {
             'grant_type': 'refresh_token',
