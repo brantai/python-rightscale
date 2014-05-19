@@ -8,29 +8,27 @@ from .util import get_rc_creds
 
 
 # magic strings from the 1.5 api
-DEFAULT_API_ENDPOINT = 'https://us-3.rightscale.com'
 DEFAULT_API_PREPATH = '/api/'
 ROOT_RES_PATH = DEFAULT_API_PREPATH + 'sessions'
 
 
 class RightScale(object):
+
     def __init__(
             self,
             refresh_token=None,
-            api_endpoint=DEFAULT_API_ENDPOINT,
+            api_endpoint=None,
             ):
         """
         Creates and configures the API object.
-        :param str account: The Rightscale account number
         :param str refresh_token: The refresh token provided by Rightscale when
             API access is enabled.
         :param api_endpoint: The rightscale subdomain to be hit with API
-            requests.  Defaults to 'my'.
-        :param oauth_endpoint: The rightscale subdomain to be hit with OAuth
-            token requests.  Defaults to 'us-3'.
+            requests.
         """
-        self.api_endpoint = api_endpoint
-        self.oauth_url = api_endpoint + DEFAULT_API_PREPATH + 'oauth2'
+        self.oauth_url = None
+        if api_endpoint is not None:
+            self.api_endpoint = api_endpoint
         if refresh_token is not None:
             self.refresh_token = refresh_token
         self.auth_token = None
@@ -58,12 +56,22 @@ class RightScale(object):
         if not refresh_token:
             raise ValueError("Can't login. Need refresh token!")
 
-        client = RESTOAuthClient(self.api_endpoint, ROOT_RES_PATH)
+        if hasattr(self, 'api_endpoint'):
+            api_endpoint = self.api_endpoint
+        else:
+            rc_creds = get_rc_creds()
+            api_endpoint = rc_creds[0]
+
+        if not api_endpoint:
+            raise ValueError("Can't login with no api endpoint.")
+
+        self.oauth_url = api_endpoint + DEFAULT_API_PREPATH + 'oauth2'
+        client = RESTOAuthClient(api_endpoint, ROOT_RES_PATH)
         client.headers['X-API-Version'] = '1.5'
         login_data = {
-                'grant_type': 'refresh_token',
-                'refresh_token': refresh_token,
-                }
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+            }
         response = client.post(url=self.oauth_url, data=login_data)
         if not response.ok:
             response.raise_for_status()
@@ -86,9 +94,9 @@ class RightScale(object):
             rightscript, in the format 'INPUT NAME': 'text:Value'
         """
         api_request = 'cloud/%s/instances/%s/run_executable' % (
-                self.cloud_id,
-                server_id,
-                )
+            self.cloud_id,
+            server_id,
+            )
         script_href = '/api/right_script/%s' % (script_id)
         payload = {'right_script_href': script_href}
         input_list = []
@@ -110,8 +118,8 @@ class RightScale(object):
         filters = ['state==operational']
         if deployment:
             filters.append(
-                    'deployment_href==/api/deployments/' + deployment
-                    )
+                'deployment_href==/api/deployments/' + deployment
+                )
         params = {'filter[]': filters, 'view': view}
         # TODO: replace with cloud id discovered from self.links
         api_request = DEFAULT_API_PREPATH + 'clouds/1/instances'
