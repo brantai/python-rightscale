@@ -93,6 +93,16 @@ class RESTOAuthClient(object):
 
     def reset_cache(self):
         self._links = None
+        self._root_response = None
+
+    @property
+    def root_response(self):
+        if self._root_response is None:
+            try:
+                self._root_response = self.get(self.root_path).json()
+            except:
+                return {}
+        return self._root_response
 
     @property
     def _unfiltered_links(self):
