@@ -42,8 +42,11 @@ class RESTOAuthClient(object):
         self.headers = {'Accept': 'application/json'}
 
         # convenience methods
+        self.delete = partial(self.request, 'delete')
         self.get = partial(self.request, 'get')
+        self.head = partial(self.request, 'head')
         self.post = partial(self.request, 'post')
+        self.put = partial(self.request, 'put')
 
         self.reset_cache()
 
