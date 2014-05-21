@@ -30,12 +30,12 @@ REST_HINTS = {
             ],
         }
 
+
 class RightScaleLinkyThing(dict):
     @property
     def links(self):
         rel_hrefs = self.get('links', [])
         return dict((raw['rel'], raw['href']) for raw in rel_hrefs)
-
 
 
 class RightScale(object):
@@ -53,10 +53,8 @@ class RightScale(object):
             requests.
         """
         self.oauth_url = None
-        if api_endpoint is not None:
-            self.api_endpoint = api_endpoint
-        if refresh_token is not None:
-            self.refresh_token = refresh_token
+        self.api_endpoint = api_endpoint
+        self.refresh_token = refresh_token
         self.auth_token = None
         self._client = None
 
@@ -70,28 +68,21 @@ class RightScale(object):
         """
         Gets and stores an OAUTH token from Rightscale.
         """
-        if hasattr(self, 'refresh_token'):
-            # when specified to the constructor, take the user at its word.
-            # don't try to fall back to the rc file because they may be trying
-            # to login to a different account and we don't want to surprise
-            # them.  if they passed in None, shame on them.
+        rc_creds = get_rc_creds()
+
+        if self.api_endpoint is not None:
+            api_endpoint = self.api_endpoint
+        else:
+            api_endpoint = rc_creds[0]
+        if not api_endpoint:
+            raise ValueError("Can't login with no api endpoint.")
+
+        if self.refresh_token is not None:
             refresh_token = self.refresh_token
         else:
-            rc_creds = get_rc_creds()
             refresh_token = rc_creds[1]
         if not refresh_token:
             raise ValueError("Can't login. Need refresh token!")
-        self.refresh_token = refresh_token
-
-        if hasattr(self, 'api_endpoint'):
-            api_endpoint = self.api_endpoint
-        else:
-            rc_creds = get_rc_creds()
-            api_endpoint = rc_creds[0]
-
-        if not api_endpoint:
-            raise ValueError("Can't login with no api endpoint.")
-        self.api_endpoint = api_endpoint
 
         self.oauth_url = api_endpoint + DEFAULT_API_PREPATH + 'oauth2'
         client = RESTOAuthClient(api_endpoint, ROOT_RES_PATH, REST_HINTS)
