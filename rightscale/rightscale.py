@@ -30,6 +30,13 @@ REST_HINTS = {
             ],
         }
 
+class RightScaleLinkyThing(dict):
+    @property
+    def links(self):
+        rel_hrefs = self.get('links', [])
+        return dict((raw['rel'], raw['href']) for raw in rel_hrefs)
+
+
 
 class RightScale(object):
 
