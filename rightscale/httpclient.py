@@ -65,9 +65,10 @@ class RESTOAuthClient(object):
             If both :attr:`path` and :attr:`url` are specified, the value in
             :attr:`url` is used and the :attr:`path` is ignored.
 
-        :param list of int ignore_codes: List of HTTP error codes (e.g.
-            404, 500) that should be ignored.  If an HTTP error occurs and it
-            is *not* in :attr:`ignore_codes`, then an exception is raised.
+        :param ignore_codes: List of HTTP error codes (e.g.  404, 500) that
+            should be ignored.  If an HTTP error occurs and it is *not* in
+            :attr:`ignore_codes`, then an exception is raised.
+        :type ignore_codes: list of int
 
         :param kwargs: Any other kwargs to pass to :meth:`requests.request()`.
 
