@@ -64,24 +64,6 @@ class TestUnfilteredLinks:
         assert id_first != id_next
 
 
-class TestResAttrs:
-    def setup(self):
-        client = RESTOAuthClient()
-        client._links = dict((g, '/api/' + g) for g in GOODATTRS)
-        client.get = MagicMock()
-        self.client = client
-
-    def test_good_attrs(self):
-        c = self.client
-        for g in GOODATTRS:
-            assert hasattr(c, g)
-            c.get.assert_called_with('/api/' + g)
-
-    def test_bad_attrs(self):
-        for b in BADATTRS:
-            assert not hasattr(self.client, b)
-
-
 class TestHints:
     def setup(self):
         client = RESTOAuthClient()

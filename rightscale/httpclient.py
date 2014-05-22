@@ -125,14 +125,3 @@ class RESTOAuthClient(object):
                 hinted_links.pop(r, None)
             hinted_links.update(self.hints.get('add', {}))
         return hinted_links
-
-    def __getattr__(self, name):
-        if name not in self.links:
-            raise AttributeError('%s object has no attribute %s' % (
-                self.__class__.__name__,
-                name,
-                ))
-        path = self.links[name]
-        response = self.get(path)
-        # TODO: construct appropriate objects based on content-type
-        return response.json()

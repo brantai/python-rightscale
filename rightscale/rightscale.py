@@ -3,6 +3,7 @@ Python-Rightscale
 
 A stupid wrapper around rightscale's HTTP API
 """
+import types
 from .httpclient import RESTOAuthClient
 from .util import get_rc_creds
 
@@ -30,6 +31,85 @@ REST_HINTS = {
             ],
         }
 
+RS_DEFAULT_ACTIONS = {
+        'index': {
+            'http_method': 'get',
+            },
+        'show': {
+            'http_method': 'get',
+            'extra_path': '/%(res_id)s',
+            },
+        'create': {
+            'http_method': 'post',
+            },
+        'update': {
+            'http_method': 'put',
+            'extra_path': '/%(res_id)s',
+            },
+        'destroy': {
+            'http_method': 'delete',
+            'extra_path': '/%(res_id)s',
+            },
+        }
+
+RS_REST_ACTIONS = {
+
+        'accounts': {
+            'index': None,
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
+
+        'self': None,
+
+        'servers': {
+            'clone': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/clone',
+                },
+            'launch': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/launch',
+                },
+            'terminate': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/terminate',
+                },
+            },
+
+        # workaround inconsistency in rs hateoas
+        'sessions': {
+            'accounts': {
+                'http_method': 'get',
+                'extra_path': '/accounts',
+                },
+            'index': None,
+            'show': None,
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
+
+        }
+
+
+def get_resource_method(name, template):
+    """
+    Creates a function that is suitable as a method for RightScaleResource.
+    """
+    def rsr_meth(self, **kwargs):
+        http_method = template['http_method']
+        extra_path = template.get('extra_path')
+        if extra_path:
+            fills = {'res_id': kwargs.pop('res_id', '')}
+            path = self.path + (extra_path % fills)
+        else:
+            path = self.path
+        return self.client.request(http_method, path, **kwargs)
+    rsr_meth.__name__ = name
+    return rsr_meth
+
 
 class RightScaleLinkyThing(dict):
     @property
@@ -38,12 +118,25 @@ class RightScaleLinkyThing(dict):
         return dict((raw['rel'], raw['href']) for raw in rel_hrefs)
 
 
+class RightScaleResource(object):
+    def __init__(self, path, client, actions=RS_DEFAULT_ACTIONS):
+        self.path = path
+        self.client = client
+        for name, template in actions.items():
+            if not template:
+                continue
+            method = get_resource_method(name, template)
+            setattr(self, name, types.MethodType(method, self, self.__class__))
+
+
 class RightScale(object):
 
     def __init__(
             self,
             refresh_token=None,
             api_endpoint=None,
+            api_prepath=DEFAULT_API_PREPATH,
+            action_templates=RS_REST_ACTIONS,
             ):
         """
         Creates and configures the API object.
@@ -51,11 +144,17 @@ class RightScale(object):
             API access is enabled.
         :param api_endpoint: The rightscale subdomain to be hit with API
             requests.
+        :param str api_prepath: A string to prepend to partial resource paths.
+            E.g. ``/api/``.
+        :param dict action_templates: A map of templates that is used to create
+            the "action" methods on RightScaleResource objects.
         """
         self.oauth_url = None
         self.api_endpoint = api_endpoint
         self.refresh_token = refresh_token
         self.auth_token = None
+        self.api_prepath = api_prepath
+        self.action_templates = action_templates
         self._client = None
 
     @property
@@ -157,3 +256,30 @@ class RightScale(object):
         for the API call.
         """
         return self.client.get(ACCOUNT_INFO_RES_PATH).json()
+
+    def _resources(self):
+        rs_root = RightScaleLinkyThing(self.client.root_response)
+        links = rs_root.links
+        for name, action in self.action_templates.iteritems():
+            if action is None:
+                del links[name]
+                continue
+            if name not in links:
+                links[unicode(name)] = unicode(self.api_prepath + name)
+        return links
+
+    def __dir__(self):
+        return self._resources().keys()
+
+    def __getattr__(self, name):
+        path = self._resources().get(name)
+        if not path:
+            raise AttributeError('%s object has no attribute %s' % (
+                self.__class__.__name__,
+                name,
+                ))
+        actions = RS_DEFAULT_ACTIONS.copy()
+        tpl = self.action_templates.get(name)
+        if tpl:
+            actions.update(tpl)
+        return RightScaleResource(path, self.client, actions)
