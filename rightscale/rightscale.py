@@ -12,10 +12,11 @@ from .util import get_rc_creds
 DEFAULT_API_PREPATH = '/api/'
 ROOT_RES_PATH = DEFAULT_API_PREPATH + 'sessions'
 
-# this *should* be discoverable from the '/api/sessions' route above, but it is
-# not.  there is an open ticket filed with rightscale.  until it gets
-# addressed, it's another piece of magic:
+# these *should* be discoverable from the '/api/sessions' route above, but they
+# are not.  there is an open ticket filed with rightscale.  until it gets
+# addressed, it's just more magic:
 ACCOUNT_INFO_RES_PATH = DEFAULT_API_PREPATH + 'sessions/accounts'
+HEALTH_CHECK_RES_PATH = DEFAULT_API_PREPATH + 'health-check'
 
 # In theory, RightScale's API is discoverable through ``links`` in responses.
 # In practice, we have to help our robots along with the following hints:
@@ -52,10 +53,187 @@ RS_DEFAULT_ACTIONS = {
             },
         }
 
+# Specify variations from the default actions defined in RS_DEFAULT_ACTIONS.
+# These specs come from http://reference.rightscale.com/api1.5/index.html
 RS_REST_ACTIONS = {
+
+        'account_groups': {
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
 
         'accounts': {
             'index': None,
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
+
+        'alerts': {
+            'disable': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/disable',
+                },
+            'enable': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/enable',
+                },
+            'quench': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/quench',
+                },
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
+
+        'audit_entries': {
+            'append': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/append',
+                },
+            'detail': {
+                'http_method': 'get',
+                'extra_path': '/%(res_id)s/detail',
+                },
+            'destroy': None,
+            },
+
+        'backups': {
+            'cleanup': {
+                'http_method': 'post',
+                'extra_path': '/cleanup',
+                },
+            },
+
+        'child_accounts': {
+            'show': None,
+            'destroy': None,
+            },
+
+        'cloud_accounts': {
+            'update': None,
+            },
+
+        'clouds': {
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
+
+        # these are only in the 1.5 docs and are not available as hrefs.
+        'cookbook_attachments': {
+            'multi_attach': {
+                'http_method': 'post',
+                'extra_path': '/multi_attach',
+                },
+            'multi_detach': {
+                'http_method': 'post',
+                'extra_path': '/multi_detach',
+                },
+            'update': None,
+            },
+
+        'cookbooks': {
+            'follow': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/follow',
+                },
+            'freeze': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/freeze',
+                },
+            'obsolete': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/obsolete',
+                },
+            'create': None,
+            'update': None,
+            },
+
+        'deployments': {
+            'clone': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/clone',
+                },
+            'lock': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/lock',
+                },
+            'servers': {
+                'http_method': 'get',
+                'extra_path': '/%(res_id)s/servers',
+                },
+            'unlock': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/unlock',
+                },
+            },
+
+        'identity_providers': {
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
+
+        'multi_cloud_images': {
+            'clone': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/clone',
+                },
+            'commit': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/commit',
+                },
+            },
+
+        'permissions': {
+            'update': None,
+            },
+
+        # only in 1.5 api docs, not discoverable via href
+        'placement_groups': {
+            'update': None,
+            },
+
+        'preferences': {
+            'create': None,
+            },
+
+        'publication_lineages': {
+            'index': None,
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
+
+        'publications': {
+            'import': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/import',
+                },
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
+
+        'repositories': {
+            'cookbook_import': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/cookbook_import',
+                },
+            'refetch': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/refetch',
+                },
+            'resolve': {
+                'http_method': 'post',
+                'extra_path': '/resolve',
+                },
+            },
+
+        'right_scripts': {
             'create': None,
             'update': None,
             'destroy': None,
@@ -65,6 +243,64 @@ RS_REST_ACTIONS = {
         # resource.  sadly, the href=/api/session.  regardless, we don't need
         # it as an attribute because it's where we started off.
         'self': None,
+
+        'server_arrays': {
+            'clone': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/clone',
+                },
+            'current_instances': {
+                'http_method': 'get',
+                'extra_path': '/%(res_id)s/current_instances',
+                },
+            'launch': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/launch',
+                },
+            'multi_run_executable': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/multi_run_executable',
+                },
+            'multi_terminate': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/multi_terminate',
+                },
+            },
+
+        'server_template_multi_cloud_images': {
+            'make_default': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/make_default',
+                },
+            'update': None,
+            },
+
+        'server_templates': {
+            'clone': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/clone',
+                },
+            'commit': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/commit',
+                },
+            'detect_changes_in_head': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/detect_changes_in_head',
+                },
+            'publish': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/publish',
+                },
+            'resolve': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/resolve',
+                },
+            'swap_repository': {
+                'http_method': 'post',
+                'extra_path': '/%(res_id)s/swap_repository',
+                },
+            },
 
         'servers': {
             'clone': {
@@ -91,6 +327,34 @@ RS_REST_ACTIONS = {
             'show': None,
             'create': None,
             'update': None,
+            'destroy': None,
+            },
+
+        'tags': {
+            'by_resource': {
+                'http_method': 'post',
+                'extra_path': '/by_resource',
+                },
+            'by_tag': {
+                'http_method': 'post',
+                'extra_path': '/by_tag',
+                },
+            'multi_add': {
+                'http_method': 'post',
+                'extra_path': '/multi_add',
+                },
+            'multi_delete': {
+                'http_method': 'post',
+                'extra_path': '/multi_delete',
+                },
+            'index': None,
+            'show': None,
+            'create': None,
+            'update': None,
+            'destroy': None,
+            },
+
+        'users': {
             'destroy': None,
             },
 
@@ -259,6 +523,10 @@ class RightScale(object):
         for the API call.
         """
         return self.client.get(ACCOUNT_INFO_RES_PATH).json()
+
+    def health_check(self):
+        # only in 1.5 api docs, not discoverable via href
+        return self.client.get(HEALTH_CHECK_RES_PATH).json()
 
     def _resources(self):
         rs_root = RightScaleLinkyThing(self.client.root_response)
