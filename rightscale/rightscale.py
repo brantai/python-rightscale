@@ -3,7 +3,6 @@ Python-Rightscale
 
 A stupid wrapper around rightscale's HTTP API
 """
-import time
 import types
 from .httpclient import RESTOAuthClient
 from .util import get_rc_creds
@@ -379,21 +378,6 @@ def get_resource_method(name, template):
     return rsr_meth
 
 
-def find_href(obj, rel):
-    for l in obj.get('links', []):
-        if l['rel'] == rel:
-            return l['href']
-
-
-def find_by_name(res, name):
-    params = {'filter[]': ['name==%s' % name]}
-    response = res.index(params=params)
-    found = response.json()
-    if len(found) > 1:
-        raise ValueError("Found too many matches for %s" % name)
-    return found[0]
-
-
 class RightScaleLinkyThing(dict):
     @property
     def links(self):
@@ -481,82 +465,6 @@ class RightScale(object):
         self.auth_token = "Bearer %s" % raw_token['access_token']
         client.headers['Authorization'] = self.auth_token
         self._client = client
-
-    def run_script(self, server_name, script_name, inputs=None):
-        """
-        Runs a RightScript and polls for status.
-
-        Sample usage::
-
-            rs = RightScale()
-            rs.run_script(
-                    'some server',
-                    'my cool bob lol script',
-                    inputs={'BOB': 'blah blah', 'LOL': 'fubar'},
-                    )
-
-        Sample output::
-
-            status: Querying tags
-            status: Querying tags
-            status: Preparing execution
-            status: RightScript: 'my cool bob lol script'
-            status: completed: my cool bob lol script
-
-        """
-        script = find_by_name(self.right_scripts, script_name)
-        script_href = find_href(script, 'self')
-        server = find_by_name(self.servers, server_name)
-        instance_href = find_href(server, 'current_instance')
-        path = instance_href + '/run_executable'
-
-        data = {
-                'right_script_href': script_href,
-                }
-        if inputs:
-            for k, v in inputs.items():
-                data['inputs[%s]' % k] = 'text:' + v
-        response = self.client.post(path, data=data)
-        status_path = response.headers['location']
-        for i in range(10):
-            status = self.client.get(status_path).json()
-            summary = status.get('summary', '')
-            print 'status: %s' % summary
-            if summary.startswith('completed'):
-                return
-            time.sleep(1)
-        print 'Done waiting. Poll %s for status.' % status_path
-
-    def list_instances(self, deployment=None, view='tiny'):
-        """
-        Returns a list of instances from your account.
-
-        :param deployment (optional): If provided, only lists servers in the
-            specified deployment
-        """
-        filters = ['state==operational']
-        if deployment:
-            filters.append(
-                'deployment_href==/api/deployments/' + deployment
-                )
-        params = {'filter[]': filters, 'view': view}
-        # TODO: replace with cloud id discovered from self.links
-        api_request = DEFAULT_API_PREPATH + 'clouds/1/instances'
-        response = self.client.get(api_request, params=params)
-        # TODO: return something more meaningful once we know what format it
-        # comes back in.
-        return response.json()
-        # instance_list = {}
-        # for svr in response:
-        #     instance_list[svr['resource_uid']] = svr
-        # return instance_list
-
-    def get_accounts(self):
-        """
-        Returns the RightScale accounts available using the login creds
-        for the API call.
-        """
-        return self.client.get(ACCOUNT_INFO_RES_PATH).json()
 
     def health_check(self):
         # only in 1.5 api docs, not discoverable via href

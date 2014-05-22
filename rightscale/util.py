@@ -41,3 +41,18 @@ def get_rc_creds():
                 )
     except:
         return ('', '')
+
+
+def find_href(obj, rel):
+    for l in obj.get('links', []):
+        if l['rel'] == rel:
+            return l['href']
+
+
+def find_by_name(res, name):
+    params = {'filter[]': ['name==%s' % name]}
+    response = res.index(params=params)
+    found = response.json()
+    if len(found) > 1:
+        raise ValueError("Found too many matches for %s" % name)
+    return found[0]

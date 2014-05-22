@@ -24,22 +24,28 @@ import rightscale
 api = rightscale.RightScale()
 ```
 
-**Getting a list of all servers**
+**Convenience Commands**
 
-```python
-server_list = api.list_instances()
-```
+Here are some examples of some common high-level operations for which functions have been implemented in this library:
 
-server_list ends up being a python list of every instance in your account in the json format provided by RightScale.
+- List all instances in `us-east-1`:
 
-**Running a RightScript on a server instance**
+  ```python
+  from rightscale import list_instances
+  use1_instances = list_instances(cloud_name='us-east-1')
+  ```
 
-```python
-inputs = {
-    'APACHE_VHOST': 'my-photo-gallery',
-    }
-api.run_script('my web server', 'enable apache vhost', inputs=inputs)
-```
+  Upon success, `use1_instances` will contain a list of dict objects representing the tiny view of each instance as returned by the RightScale API.
+
+- Run a RightScript on a specific server:
+
+  ```python
+  from rightscale import run_script_on_server
+  inputs = {
+      'APACHE_VHOST': 'my-photo-gallery',
+      }
+  run_script_on_server('enable apache vhost', 'my web server', inputs=inputs)
+  ```
 
 
 Object Interface to RightScale API
