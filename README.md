@@ -54,6 +54,20 @@ This library's object interface was modeled after the REST-ish API as documented
 
 Users of this library should consult the [API reference](http://reference.rightscale.com/api1.5/index.html) for context-specific parameters like filters, views, GET and POST parameters.
 
+**Root API Object**
+
+If you only need to perform a common high-level operation like `run_script_on_server`, then you can just import the necessary function from the top-level package and start calling it.  The convenience commands all expect you to have working credentials in `~/.rightscalerc`.  They also use an implicitly created API object (i.e. singleton instance of `rightscale.RightScale`) and perform all the API calls for you.
+
+However, if you need to specify different credentials than those stored in `~/.rightscalerc`, or if you need full access to the RightScale API, then you should create your own API object by instantiating `rightscale.RightScale`.  E.g.
+
+```python
+from rightscale import RightScale
+api = RightScale()
+
+# now check rightscale's health!
+api.health_check()
+```
+
 **Resources and Actions**
 
 The `rightscale.RightScale` class has attributes for the top-level resources documented in the API reference.  The methods on each of the `RightScale` attributes map to the actions listed in the documentation.  Invoking an action method is like issuing an HTTP request.  In fact, action methods return HTTP `Response` objects from the [Requests library](http://python-requests.org).  For example, the [Users resource](http://reference.rightscale.com/api1.5/resources/ResourceAccounts.html) has an `index` action that lists all the users available to the account.  The HTTP request for this list would be:
