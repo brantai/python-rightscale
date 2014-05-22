@@ -74,6 +74,7 @@ account = api.accounts.show(res_id='12345').json()
 Regardless of what the actual name of the resource is (e.g. `accounts`, `users`, `servers`, etc...), the special keyword argument is always called `res_id`.
 
 **Filters**
+
 The action methods are just wrappers around HTTP `Request` objects from the [Requests library](http://python-requests.org).  That means that the methods accept GET parameters and POST data as keyword arguments.  For example, to find a server by name, the API reference instructs us to use the `index` method on the Servers resource with a filter.  If the name of the server were `server_foo`, the HTTP request would be:
 
     GET /api/servers?filter[]=name==server_foo
