@@ -61,6 +61,9 @@ RS_REST_ACTIONS = {
             'destroy': None,
             },
 
+        # rs api 1.5 returns a link where rel=self for the ``/api/sessions``
+        # resource.  sadly, the href=/api/session.  regardless, we don't need
+        # it as an attribute because it's where we started off.
         'self': None,
 
         'servers': {
