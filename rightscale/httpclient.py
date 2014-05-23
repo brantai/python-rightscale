@@ -5,18 +5,10 @@ import requests
 DEFAULT_ROOT_RES_PATH = '/'
 
 
-class RESTOAuthClient(object):
+class HTTPClient(object):
 
     """
-    HTTP client that is aware of REST and OAuth semantics.
-
-    Provides CRUD methods for API resources using HTTP verbs.  It also
-    interrogates the API server for links to related resources and exposes
-    discovered resources as attributes on this root object.
-
-    For additional flexibility, helper methods like :meth:`get`, :meth:`post`,
-    and the generic :meth:`request` allow the caller to call any routes that
-    are not automatically exposed as attributes of this object.
+    Convenience wrapper around Requests.
 
     :param str endpoint: URL for the API endpoint. E.g. ``https://blah.org``.
 

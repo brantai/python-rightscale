@@ -5,19 +5,24 @@ A stupid wrapper around rightscale's HTTP API
 """
 import types
 from .actions import RS_DEFAULT_ACTIONS, RS_REST_ACTIONS
-from .httpclient import RESTOAuthClient
+from .httpclient import HTTPClient
 from .util import get_rc_creds
 
 
 # magic strings from the 1.5 api
-DEFAULT_API_PREPATH = '/api/'
-ROOT_RES_PATH = DEFAULT_API_PREPATH + 'sessions'
+DEFAULT_API_PREPATH = '/api'
+
+# authenticate here
+OAUTH2_RES_PATH = '/'.join((DEFAULT_API_PREPATH, 'oauth2'))
+
+# start hypermedia searches here
+ROOT_RES_PATH = '/'.join((DEFAULT_API_PREPATH, 'sessions'))
 
 # these *should* be discoverable from the '/api/sessions' route above, but they
 # are not.  there is an open ticket filed with rightscale.  until it gets
 # addressed, it's just more magic:
-ACCOUNT_INFO_RES_PATH = DEFAULT_API_PREPATH + 'sessions/accounts'
-HEALTH_CHECK_RES_PATH = DEFAULT_API_PREPATH + 'health-check'
+ACCOUNT_INFO_RES_PATH = '/'.join((DEFAULT_API_PREPATH, 'sessions/accounts'))
+HEALTH_CHECK_RES_PATH = '/'.join((DEFAULT_API_PREPATH, 'health-check'))
 
 
 def get_resource_method(name, template):
@@ -59,9 +64,9 @@ class RightScale(object):
 
     def __init__(
             self,
+            path=DEFAULT_API_PREPATH,
             refresh_token=None,
             api_endpoint=None,
-            api_prepath=DEFAULT_API_PREPATH,
             ):
         """
         Creates and configures the API object.
@@ -69,14 +74,13 @@ class RightScale(object):
             API access is enabled.
         :param api_endpoint: The rightscale subdomain to be hit with API
             requests.
-        :param str api_prepath: A string to prepend to partial resource paths.
-            E.g. ``/api/``.
+        :param str path: The path portion of the URL.
+            E.g. ``/api``.
         """
-        self.oauth_url = None
         self.api_endpoint = api_endpoint
         self.refresh_token = refresh_token
         self.auth_token = None
-        self.api_prepath = api_prepath
+        self.path = path
         self._client = None
 
     @property
@@ -105,14 +109,13 @@ class RightScale(object):
         if not refresh_token:
             raise ValueError("Can't login. Need refresh token!")
 
-        self.oauth_url = api_endpoint + DEFAULT_API_PREPATH + 'oauth2'
-        client = RESTOAuthClient(api_endpoint, ROOT_RES_PATH)
+        client = HTTPClient(api_endpoint, ROOT_RES_PATH)
         client.headers['X-API-Version'] = '1.5'
         login_data = {
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,
             }
-        response = client.post(url=self.oauth_url, data=login_data)
+        response = client.post(OAUTH2_RES_PATH, data=login_data)
         if not response.ok:
             response.raise_for_status()
 
@@ -133,7 +136,7 @@ class RightScale(object):
                 del links[name]
                 continue
             if name not in links:
-                links[unicode(name)] = unicode(self.api_prepath + name)
+                links[unicode(name)] = unicode('%s/%s' % (self.path, name))
         return links
 
     def __dir__(self):
