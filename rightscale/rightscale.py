@@ -110,7 +110,7 @@ class RightScale(object):
             raise ValueError("Can't login. Need refresh token!")
 
         client = HTTPClient(api_endpoint, ROOT_RES_PATH)
-        client.headers['X-API-Version'] = '1.5'
+        client.s.headers['X-API-Version'] = '1.5'
         login_data = {
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,
@@ -121,7 +121,7 @@ class RightScale(object):
 
         raw_token = response.json()
         self.auth_token = "Bearer %s" % raw_token['access_token']
-        client.headers['Authorization'] = self.auth_token
+        client.s.headers['Authorization'] = self.auth_token
         self._client = client
 
     def health_check(self):

@@ -24,7 +24,9 @@ class HTTPClient(object):
             ):
         self.endpoint = endpoint
         self.root_path = root_path
-        self.headers = {'Accept': 'application/json'}
+        s = requests.Session()
+        s.headers['Accept'] = 'application/json'
+        self.s = s
 
         # convenience methods
         self.delete = partial(self.request, 'delete')
@@ -60,19 +62,7 @@ class HTTPClient(object):
         Returns a :class:`requests.Response` object.
         """
         _url = url if url else (self.endpoint + path)
-
-        # merge with defaults in headers attribute.  incoming 'headers' take
-        # priority over values in self.headers to allow last-minute overrides
-        # if the caller really knows what they're doing.
-        if 'headers' in kwargs:
-            headers = kwargs.pop('headers')
-            for k, v in self.headers.items():
-                headers.setdefaults(k, v)
-        else:
-            headers = self.headers
-        kwargs['headers'] = headers
-
-        r = requests.request(method, _url, **kwargs)
+        r = self.s.request(method, _url, **kwargs)
         if not r.ok and r.status_code not in ignore_codes:
             r.raise_for_status()
         return r
