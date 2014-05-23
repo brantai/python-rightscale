@@ -62,7 +62,6 @@ class RightScale(object):
             refresh_token=None,
             api_endpoint=None,
             api_prepath=DEFAULT_API_PREPATH,
-            action_templates=RS_REST_ACTIONS,
             ):
         """
         Creates and configures the API object.
@@ -72,15 +71,12 @@ class RightScale(object):
             requests.
         :param str api_prepath: A string to prepend to partial resource paths.
             E.g. ``/api/``.
-        :param dict action_templates: A map of templates that is used to create
-            the "action" methods on RightScaleResource objects.
         """
         self.oauth_url = None
         self.api_endpoint = api_endpoint
         self.refresh_token = refresh_token
         self.auth_token = None
         self.api_prepath = api_prepath
-        self.action_templates = action_templates
         self._client = None
 
     @property
@@ -132,7 +128,7 @@ class RightScale(object):
     def _resources(self):
         rs_root = RightScaleLinkyThing(self.client.root_response)
         links = rs_root.links
-        for name, action in self.action_templates.iteritems():
+        for name, action in RS_REST_ACTIONS.iteritems():
             if action is None:
                 del links[name]
                 continue
@@ -151,7 +147,7 @@ class RightScale(object):
                 name,
                 ))
         actions = RS_DEFAULT_ACTIONS.copy()
-        tpl = self.action_templates.get(name)
+        tpl = RS_REST_ACTIONS.get(name)
         if tpl:
             actions.update(tpl)
         return RightScaleResource(path, self.client, actions)
