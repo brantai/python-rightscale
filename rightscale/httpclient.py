@@ -23,22 +23,15 @@ class RESTOAuthClient(object):
     :param str root_path: The initial path to use for discovering the rest of
         the resources.  E.g. ``/api/``.
 
-    :param dict hints: Hints for URL paths that should be added or removed from
-        the set of discovered paths.  This allows users to work around
-        inconsistencies in a vendor's REST implementation, or just ignore large
-        swaths of discovered routes that they don't need.
-
     """
 
     def __init__(
             self,
             endpoint='',
             root_path=DEFAULT_ROOT_RES_PATH,
-            hints=None,
             ):
         self.endpoint = endpoint
         self.root_path = root_path
-        self.hints = hints
         self.headers = {'Accept': 'application/json'}
 
         # convenience methods
@@ -93,7 +86,6 @@ class RESTOAuthClient(object):
         return r
 
     def reset_cache(self):
-        self._links = None
         self._root_response = None
 
     @property
@@ -104,24 +96,3 @@ class RESTOAuthClient(object):
             except:
                 return {}
         return self._root_response
-
-    @property
-    def _unfiltered_links(self):
-        if self._links is None:
-            response = self.get(self.root_path)
-            if not response.ok:
-                return {}
-            blob = response.json()
-            self._links = dict(
-                (raw['rel'], raw['href']) for raw in blob.get('links', [])
-                )
-        return self._links
-
-    @property
-    def links(self):
-        hinted_links = self._unfiltered_links.copy()
-        if self.hints:
-            for r in self.hints.get('remove', []):
-                hinted_links.pop(r, None)
-            hinted_links.update(self.hints.get('add', {}))
-        return hinted_links

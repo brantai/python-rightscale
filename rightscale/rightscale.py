@@ -20,18 +20,6 @@ HEALTH_CHECK_RES_PATH = DEFAULT_API_PREPATH + 'health-check'
 
 # In theory, RightScale's API is discoverable through ``links`` in responses.
 # In practice, we have to help our robots along with the following hints:
-REST_HINTS = {
-        # using unicodes below just to be consistent with what is discovered
-        # directly from the http requests
-        'add': {
-            u'sessions.accounts': unicode(ACCOUNT_INFO_RES_PATH),
-            },
-        'remove': [
-            u'accounts.index',
-            u'self'
-            ],
-        }
-
 RS_DEFAULT_ACTIONS = {
         'index': {
             'http_method': 'get',
@@ -386,7 +374,7 @@ class RightScaleLinkyThing(dict):
 
 
 class RightScaleResource(object):
-    def __init__(self, path, client, actions=RS_DEFAULT_ACTIONS):
+    def __init__(self, path, client, actions):
         self.path = path
         self.client = client
         for name, template in actions.items():
@@ -451,7 +439,7 @@ class RightScale(object):
             raise ValueError("Can't login. Need refresh token!")
 
         self.oauth_url = api_endpoint + DEFAULT_API_PREPATH + 'oauth2'
-        client = RESTOAuthClient(api_endpoint, ROOT_RES_PATH, REST_HINTS)
+        client = RESTOAuthClient(api_endpoint, ROOT_RES_PATH)
         client.headers['X-API-Version'] = '1.5'
         login_data = {
             'grant_type': 'refresh_token',
