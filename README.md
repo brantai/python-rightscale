@@ -70,15 +70,17 @@ api.health_check()
 
 **Resources and Actions**
 
-The `rightscale.RightScale` class has attributes for the top-level resources documented in the API reference.  The methods on each of the `RightScale` attributes map to the actions listed in the documentation.  Invoking an action method is like issuing an HTTP request.  In fact, action methods return HTTP `Response` objects from the [Requests library](http://python-requests.org).  For example, the [Users resource](http://reference.rightscale.com/api1.5/resources/ResourceAccounts.html) has an `index` action that lists all the users available to the account.  The HTTP request for this list would be:
+The `rightscale.RightScale` class has attributes for the top-level resources documented in the API reference.  The methods on each of the `RightScale` attributes map to the actions listed in the documentation.  Invoking an action method is like issuing an HTTP request.  Action methods return objects that always have a `response` attribute containing the HTTP `Response` objects from the [Requests library](http://python-requests.org).  For example, the [Users resource](http://reference.rightscale.com/api1.5/resources/ResourceAccounts.html) has an `index` action that lists all the users available to the account.  The HTTP request for this list would be:
 
     GET /api/users
 
 To retrieve the list using this library:
 
 ```python
-response = api.users.index()
-users = response.json()
+users = api.users.index()
+
+# inspect http response headers
+assert 'application/vnd.rightscale.user+json' in users.response.headers['content-type']
 ```
 
 Most actions that act on a specific resource (as opposed to a set of resources) require a resource `id` value.  For example, to get account details, the API documentation describes the [Accounts resource](http://reference.rightscale.com/api1.5/resources/ResourceAccounts.html) as having a `show` action that requires an `id` as the last part of the URL path.  If the account `id` were `12345`, the associated HTTP request would be:
@@ -88,7 +90,7 @@ Most actions that act on a specific resource (as opposed to a set of resources) 
 To specify a resource identifier to action methods, assign a value to the `res_id` keyword argument like this:
 
 ```python
-account = api.accounts.show(res_id='12345').json()
+account = api.accounts.show(res_id='12345')
 ```
 
 Regardless of what the actual name of the resource is (e.g. `accounts`, `users`, `servers`, etc...), the special keyword argument is always called `res_id`.
@@ -105,5 +107,7 @@ And RightScale would return a list of matches.  Using this library, to conduct t
 params = {
     'filter[]': ['name==server_foo'],
     }
-found = api.servers.index(params=params).json()
+found = api.servers.index(params=params)
 ```
+
+**HTTP Response Objects**

@@ -6,7 +6,7 @@ A stupid wrapper around rightscale's HTTP API
 import types
 from .actions import RS_DEFAULT_ACTIONS, RS_REST_ACTIONS
 from .httpclient import HTTPClient
-from .util import get_rc_creds
+from .util import get_rc_creds, HookList
 
 
 # magic strings from the 1.5 api
@@ -24,6 +24,8 @@ ROOT_RES_PATH = '/'.join((DEFAULT_API_PREPATH, 'sessions'))
 ACCOUNT_INFO_RES_PATH = '/'.join((DEFAULT_API_PREPATH, 'sessions/accounts'))
 HEALTH_CHECK_RES_PATH = '/'.join((DEFAULT_API_PREPATH, 'health-check'))
 
+COLLECTION_TYPE = 'type=collection'
+
 
 def get_resource_method(name, template):
     """
@@ -37,7 +39,16 @@ def get_resource_method(name, template):
             path = self.path + (extra_path % fills)
         else:
             path = self.path
-        return self.client.request(http_method, path, **kwargs)
+        response = self.client.request(http_method, path, **kwargs)
+        content_type = response.headers['content-type']
+        ct_fields = content_type.split(';')
+        obj = response.json()
+        if COLLECTION_TYPE in ct_fields:
+            ret = HookList([RightScaleLinkyThing(r) for r in obj])
+        else:
+            ret = RightScaleLinkyThing(obj)
+        ret.response = response
+        return ret
     rsr_meth.__name__ = name
     return rsr_meth
 

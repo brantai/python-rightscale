@@ -9,6 +9,14 @@ CFG_OPTION_REF_TOKEN = 'refresh_token'
 _config = None
 
 
+class HookList(list):
+    pass
+
+
+class HookDict(dict):
+    pass
+
+
 def get_config():
     global _config
     if not _config:
@@ -51,8 +59,7 @@ def find_href(obj, rel):
 
 def find_by_name(res, name):
     params = {'filter[]': ['name==%s' % name]}
-    response = res.index(params=params)
-    found = response.json()
+    found = res.index(params=params)
     if len(found) > 1:
         raise ValueError("Found too many matches for %s" % name)
     return found[0]

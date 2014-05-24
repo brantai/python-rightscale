@@ -26,7 +26,7 @@ def get_accounts():
     Returns the RightScale accounts for the given login creds.
     """
     api = get_api()
-    return api.sessions.accounts().json()
+    return api.sessions.accounts()
 
 
 def list_instances(deployment_name='', cloud_name='EC2 us-east-1', view='tiny'):
