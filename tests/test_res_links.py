@@ -1,8 +1,8 @@
-from rightscale.rightscale import RightScaleLinkyThing
+from rightscale.rightscale import Resource
 
 
 def test_empty_linky_thing():
-    linky = RightScaleLinkyThing()
+    linky = Resource()
     assert {} == linky.links
 
 
@@ -15,5 +15,5 @@ def test_loaded_linky_thing():
     data = []
     for k, v in exp.items():
         data.append({'rel': k, 'href': v})
-    linky = RightScaleLinkyThing({'links': data})
+    linky = Resource({'links': data})
     assert exp == linky.links

@@ -44,16 +44,16 @@ def get_resource_method(name, template):
         ct_fields = content_type.split(';')
         obj = response.json()
         if COLLECTION_TYPE in ct_fields:
-            ret = HookList([RightScaleLinkyThing(r) for r in obj])
+            ret = HookList([Resource(r) for r in obj])
         else:
-            ret = RightScaleLinkyThing(obj)
+            ret = Resource(obj)
         ret.response = response
         return ret
     rsr_meth.__name__ = name
     return rsr_meth
 
 
-class RightScaleLinkyThing(dict):
+class Resource(dict):
     @property
     def links(self):
         rel_hrefs = self.get('links', [])
@@ -140,7 +140,7 @@ class RightScale(object):
         return self.client.get(HEALTH_CHECK_RES_PATH).json()
 
     def _resources(self):
-        rs_root = RightScaleLinkyThing(self.client.root_response)
+        rs_root = Resource(self.client.root_response)
         links = rs_root.links
         for name, action in RS_REST_ACTIONS.iteritems():
             if action is None:
