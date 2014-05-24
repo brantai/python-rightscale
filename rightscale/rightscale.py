@@ -27,7 +27,7 @@ HEALTH_CHECK_RES_PATH = '/'.join((DEFAULT_API_PREPATH, 'health-check'))
 
 def get_resource_method(name, template):
     """
-    Creates a function that is suitable as a method for RightScaleResource.
+    Creates a function that is suitable as a method for ResourceCollection.
     """
     def rsr_meth(self, **kwargs):
         http_method = template['http_method']
@@ -49,7 +49,7 @@ class RightScaleLinkyThing(dict):
         return dict((raw['rel'], raw['href']) for raw in rel_hrefs)
 
 
-class RightScaleResource(object):
+class ResourceCollection(object):
     def __init__(self, path, client, actions):
         self.path = path
         self.client = client
@@ -153,4 +153,4 @@ class RightScale(object):
         tpl = RS_REST_ACTIONS.get(name)
         if tpl:
             actions.update(tpl)
-        return RightScaleResource(path, self.client, actions)
+        return ResourceCollection(path, self.client, actions)
