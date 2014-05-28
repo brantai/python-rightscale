@@ -110,4 +110,14 @@ params = {
 found = api.servers.index(params=params)
 ```
 
-**HTTP Response Objects**
+**Tags**
+
+Here's an example of how to find resources by tag:
+
+```python
+params = {
+    'tags[]': ['rs_backup:lineage=prod_db'],
+    'resource_type': 'volume_snapshots',
+    }
+snapshots = api.tags.by_tag(params=params)
+```
