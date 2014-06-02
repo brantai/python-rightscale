@@ -15,17 +15,23 @@ class HTTPClient(object):
     :param str root_path: The initial path to use for discovering the rest of
         the resources.  E.g. ``/api/``.
 
+    :param dict extra_headers: When specified, these key-value pairs are added
+        to the default HTTP headers passed in with each request.
+
     """
 
     def __init__(
             self,
             endpoint='',
             root_path=DEFAULT_ROOT_RES_PATH,
+            extra_headers=None,
             ):
         self.endpoint = endpoint
         self.root_path = root_path
         s = requests.Session()
         s.headers['Accept'] = 'application/json'
+        if extra_headers:
+            s.headers.update(extra_headers)
         self.s = s
 
         # convenience methods

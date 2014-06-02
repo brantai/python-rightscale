@@ -88,15 +88,35 @@ class RightScale(object):
         :param str path: The path portion of the URL.
             E.g. ``/api``.
         """
-        self.api_endpoint = api_endpoint
-        self.refresh_token = refresh_token
         self.auth_token = None
         self.path = path
-        self._client = None
+
+        rc_creds = get_rc_creds()
+
+        # prevent dumb leakage from the environment by only grabbing creds from
+        # rc file if they are not specified to the constructor.
+        if api_endpoint is None:
+            api_endpoint = rc_creds[0]
+        if not api_endpoint:
+            raise ValueError("Can't login with no api endpoint.")
+        self.api_endpoint = api_endpoint
+
+        if refresh_token is None:
+            refresh_token = rc_creds[1]
+        if not refresh_token:
+            raise ValueError("Can't login. Need refresh token!")
+        self.refresh_token = refresh_token
+
+        self._client = HTTPClient(
+                api_endpoint,
+                ROOT_RES_PATH,
+                {'X-API-Version': '1.5'},
+                )
 
     @property
     def client(self):
-        if not self._client:
+        # lazy login so you can create instances without triggering a net hit
+        if not self.auth_token:
             self.login()
         return self._client
 
@@ -104,28 +124,11 @@ class RightScale(object):
         """
         Gets and stores an OAUTH token from Rightscale.
         """
-        rc_creds = get_rc_creds()
-
-        if self.api_endpoint is not None:
-            api_endpoint = self.api_endpoint
-        else:
-            api_endpoint = rc_creds[0]
-        if not api_endpoint:
-            raise ValueError("Can't login with no api endpoint.")
-
-        if self.refresh_token is not None:
-            refresh_token = self.refresh_token
-        else:
-            refresh_token = rc_creds[1]
-        if not refresh_token:
-            raise ValueError("Can't login. Need refresh token!")
-
-        client = HTTPClient(api_endpoint, ROOT_RES_PATH)
-        client.s.headers['X-API-Version'] = '1.5'
         login_data = {
             'grant_type': 'refresh_token',
-            'refresh_token': refresh_token,
+            'refresh_token': self.refresh_token,
             }
+        client = self._client
         response = client.post(OAUTH2_RES_PATH, data=login_data)
         if not response.ok:
             response.raise_for_status()
@@ -133,7 +136,6 @@ class RightScale(object):
         raw_token = response.json()
         self.auth_token = "Bearer %s" % raw_token['access_token']
         client.s.headers['Authorization'] = self.auth_token
-        self._client = client
 
     def health_check(self):
         # only in 1.5 api docs, not discoverable via href
