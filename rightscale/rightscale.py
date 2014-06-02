@@ -54,10 +54,17 @@ def get_resource_method(name, template):
 
 
 class Resource(dict):
+    def __init__(self, *args, **kwargs):
+        super(Resource, self).__init__(*args, **kwargs)
+        self._links = None
+
     @property
     def links(self):
-        rel_hrefs = self.get('links', [])
-        return dict((raw['rel'], raw['href']) for raw in rel_hrefs)
+        # only initialize once, not if empty
+        if self._links is None:
+            rel_hrefs = self.get('links', [])
+            self._links = dict((raw['rel'], raw['href']) for raw in rel_hrefs)
+        return self._links
 
 
 class ResourceCollection(object):

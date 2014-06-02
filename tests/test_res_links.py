@@ -17,3 +17,22 @@ def test_loaded_linky_thing():
         data.append({'rel': k, 'href': v})
     linky = Resource({'links': data})
     assert exp == linky.links
+
+
+def test_allow_customize_links():
+    """
+    Allow custom links independent of original initialization data.
+    """
+    orig = {
+            'a': '/path/to/a',
+            'mojo': '/somefingelse/blah/blah',
+            'thang': '/thang.thang',
+            }
+    newmojo = 'another thing yeah'
+    exp = dict(orig, mojo=newmojo)
+    data = []
+    for k, v in orig.items():
+        data.append({'rel': k, 'href': v})
+    linky = Resource({'links': data})
+    linky.links['mojo'] = newmojo
+    assert exp == linky.links
