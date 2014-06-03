@@ -1,6 +1,6 @@
 import time
 from .rightscale import RightScale as _RS
-from .util import find_href, find_by_name
+from .util import find_by_name
 
 
 __all__ = [
@@ -46,14 +46,12 @@ def list_instances(deployment_name='', cloud_name='EC2 us-east-1', view='tiny'):
     """
     api = get_api()
     cloud = find_by_name(api.clouds, cloud_name)
-    cloud_href = find_href(cloud, 'self')
     filters = ['state==operational']
     if deployment_name:
         deploy = find_by_name(api.deployments, deployment_name)
-        deploy_href = find_href(deploy, 'self')
-        filters.append('deployment_href==' + deploy_href)
+        filters.append('deployment_href==' + deploy.links['self'])
     params = {'filter[]': filters, 'view': view}
-    api_request = cloud_href + '/instances'
+    api_request = cloud.links['self'] + '/instances'
     response = get_api().client.get(api_request, params=params)
     # TODO: return something more meaningful once we know what format it
     # comes back in.
@@ -84,13 +82,11 @@ def run_script_on_server(script_name, server_name, inputs=None, timeout_s=10):
     """
     api = get_api()
     script = find_by_name(api.right_scripts, script_name)
-    script_href = find_href(script, 'self')
     server = find_by_name(api.servers, server_name)
-    instance_href = find_href(server, 'current_instance')
-    path = instance_href + '/run_executable'
+    path = server.links['current_instance'] + '/run_executable'
 
     data = {
-            'right_script_href': script_href,
+            'right_script_href': script.links['self'],
             }
     if inputs:
         for k, v in inputs.items():

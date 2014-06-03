@@ -51,12 +51,6 @@ def get_rc_creds():
         return ('', '')
 
 
-def find_href(obj, rel):
-    for l in obj.get('links', []):
-        if l['rel'] == rel:
-            return l['href']
-
-
 def find_by_name(collection, name):
     """
     :param rightscale.ResourceCollection collection: The collection in which to
