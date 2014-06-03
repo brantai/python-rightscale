@@ -53,16 +53,26 @@ def get_resource_method(name, template):
     return rsr_meth
 
 
-class Resource(dict):
-    def __init__(self, *args, **kwargs):
-        super(Resource, self).__init__(*args, **kwargs)
+class Resource(object):
+    """
+    A single resource.
+
+    :param dict soul: The essence of the resource as returned by the RightScale
+        API.  This is the dictionary of attributes originally returned as the
+        JSON body of the HTTP response from RightScale.
+
+    """
+    def __init__(self, soul=None):
+        if soul is None:
+            soul = {}
+        self.soul = soul
         self._links = None
 
     @property
     def links(self):
         # only initialize once, not if empty
         if self._links is None:
-            rel_hrefs = self.get('links', [])
+            rel_hrefs = self.soul.get('links', [])
             self._links = dict((raw['rel'], raw['href']) for raw in rel_hrefs)
         return self._links
 
