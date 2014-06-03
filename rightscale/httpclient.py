@@ -5,15 +5,30 @@ import requests
 DEFAULT_ROOT_RES_PATH = '/'
 
 
+class HTTPResponse(object):
+    """
+    Wrapper around :class:`requests.Response`.
+
+    Parses ``Content-Type`` header and makes it available as a list of fields
+    in the :attr:`content_type` member.
+    """
+    def __init__(self, raw_response):
+        self.raw_response = raw_response
+
+        content_type = raw_response.headers.get('content-type', '')
+        ct_fields = [f.strip() for f in content_type.split(';')]
+        self.content_type = ct_fields
+
+    def __getattr__(self, name):
+        return getattr(self.raw_response, name)
+
+
 class HTTPClient(object):
 
     """
     Convenience wrapper around Requests.
 
     :param str endpoint: URL for the API endpoint. E.g. ``https://blah.org``.
-
-    :param str root_path: The initial path to use for discovering the rest of
-        the resources.  E.g. ``/api/``.
 
     :param dict extra_headers: When specified, these key-value pairs are added
         to the default HTTP headers passed in with each request.
@@ -23,11 +38,9 @@ class HTTPClient(object):
     def __init__(
             self,
             endpoint='',
-            root_path=DEFAULT_ROOT_RES_PATH,
             extra_headers=None,
             ):
         self.endpoint = endpoint
-        self.root_path = root_path
         s = requests.Session()
         s.headers['Accept'] = 'application/json'
         if extra_headers:
@@ -40,8 +53,6 @@ class HTTPClient(object):
         self.head = partial(self.request, 'head')
         self.post = partial(self.request, 'post')
         self.put = partial(self.request, 'put')
-
-        self.reset_cache()
 
     def request(self, method, path='/', url=None, ignore_codes=[], **kwargs):
         """
@@ -71,16 +82,4 @@ class HTTPClient(object):
         r = self.s.request(method, _url, **kwargs)
         if not r.ok and r.status_code not in ignore_codes:
             r.raise_for_status()
-        return r
-
-    def reset_cache(self):
-        self._root_response = None
-
-    @property
-    def root_response(self):
-        if self._root_response is None:
-            try:
-                self._root_response = self.get(self.root_path).json()
-            except:
-                return {}
-        return self._root_response
+        return HTTPResponse(r)

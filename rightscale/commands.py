@@ -49,9 +49,9 @@ def list_instances(deployment_name='', cloud_name='EC2 us-east-1', view='tiny'):
     filters = ['state==operational']
     if deployment_name:
         deploy = find_by_name(api.deployments, deployment_name)
-        filters.append('deployment_href==' + deploy.links['self'])
+        filters.append('deployment_href==' + deploy.href)
     params = {'filter[]': filters, 'view': view}
-    api_request = cloud.links['self'] + '/instances'
+    api_request = cloud.href + '/instances'
     response = get_api().client.get(api_request, params=params)
     # TODO: return something more meaningful once we know what format it
     # comes back in.
@@ -86,7 +86,7 @@ def run_script_on_server(script_name, server_name, inputs=None, timeout_s=10):
     path = server.links['current_instance'] + '/run_executable'
 
     data = {
-            'right_script_href': script.links['self'],
+            'right_script_href': script.href,
             }
     if inputs:
         for k, v in inputs.items():

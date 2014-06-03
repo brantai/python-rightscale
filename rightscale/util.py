@@ -10,7 +10,10 @@ _config = None
 
 
 class HookList(list):
-    pass
+    def __init__(self, *args, **kwargs):
+        super(HookList, self).__init__(*args)
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
 class HookDict(dict):

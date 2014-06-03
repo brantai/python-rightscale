@@ -23,7 +23,7 @@ RS_DEFAULT_ACTIONS = {
 
 # Specify variations from the default actions defined in RS_DEFAULT_ACTIONS.
 # These specs come from http://reference.rightscale.com/api1.5/index.html
-RS_REST_ACTIONS = {
+ROOT_COLLECTIONS = {
 
         'account_groups': {
             'create': None,
@@ -326,4 +326,8 @@ RS_REST_ACTIONS = {
             'destroy': None,
             },
 
+        }
+
+COLLECTIONS = {
+        'application/vnd.rightscale.session+json': ROOT_COLLECTIONS,
         }

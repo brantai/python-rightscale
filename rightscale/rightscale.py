@@ -4,7 +4,7 @@ Python-Rightscale
 A stupid wrapper around rightscale's HTTP API
 """
 import types
-from .actions import RS_DEFAULT_ACTIONS, RS_REST_ACTIONS
+from .actions import RS_DEFAULT_ACTIONS, COLLECTIONS
 from .httpclient import HTTPClient
 from .util import get_rc_creds, HookList
 
@@ -40,14 +40,14 @@ def get_resource_method(name, template):
         else:
             path = self.path
         response = self.client.request(http_method, path, **kwargs)
-        content_type = response.headers['content-type']
-        ct_fields = content_type.split(';')
         obj = response.json()
-        if COLLECTION_TYPE in ct_fields:
-            ret = HookList([Resource(r) for r in obj])
+        if COLLECTION_TYPE in response.content_type:
+            ret = HookList(
+                    [Resource(r, path, response) for r in obj],
+                    response=response
+                    )
         else:
-            ret = Resource(obj)
-        ret.response = response
+            ret = Resource(obj, path, response)
         return ret
     rsr_meth.__name__ = name
     return rsr_meth
@@ -61,11 +61,19 @@ class Resource(object):
         API.  This is the dictionary of attributes originally returned as the
         JSON body of the HTTP response from RightScale.
 
+    :param str path: The path portion of the URL.  E.g. ``/api/clouds/1``.
+
+    :param rightscale.httpclient.HTTPResponse response: The raw response object
+        returned by :meth:`HTTPClient.request`.
+
     """
-    def __init__(self, soul=None):
+    def __init__(self, soul=None, path='', response=None):
         if soul is None:
             soul = {}
         self.soul = soul
+        self.path = path
+        self.collection_actions = {}
+        self.response = response
         self._links = None
 
     def __repr__(self):
@@ -78,12 +86,55 @@ class Resource(object):
         return cmp(self.soul, other.soul)
 
     @property
+    def content_type(self):
+        if self.response:
+            return self.response.content_type[0]
+        return ''
+
+    def _get_rel_hrefs(self):
+        rel_hrefs = self.soul.get('links', [])
+        return dict((raw['rel'], raw['href']) for raw in rel_hrefs)
+
+    @property
+    def href(self):
+        return self._get_rel_hrefs().get('self', '')
+
+    @property
     def links(self):
         # only initialize once, not if empty
         if self._links is None:
-            rel_hrefs = self.soul.get('links', [])
-            self._links = dict((raw['rel'], raw['href']) for raw in rel_hrefs)
+            _links = self._get_rel_hrefs()
+            _links.pop('self', '')
+
+            collection_actions = COLLECTIONS.get(self.content_type, {})
+            self.collection_actions = collection_actions
+            for name, action in collection_actions.iteritems():
+                if action is None and name in _links:
+                    del _links[name]
+                    continue
+                if name not in _links:
+                    _links[unicode(name)] = unicode(
+                            '%s/%s' % (self.path, name)
+                            )
+
+            self._links = _links
         return self._links
+
+    def __dir__(self):
+        return self.links.keys()
+
+    def __getattr__(self, name):
+        path = self.links.get(name)
+        if not path:
+            raise AttributeError('%s object has no attribute %s' % (
+                self.__class__.__name__,
+                name,
+                ))
+        actions = RS_DEFAULT_ACTIONS.copy()
+        tpl = self.collection_actions.get(name)
+        if tpl:
+            actions.update(tpl)
+        return ResourceCollection(path, self.client, actions)
 
 
 class ResourceCollection(object):
@@ -97,7 +148,7 @@ class ResourceCollection(object):
             setattr(self, name, types.MethodType(method, self, self.__class__))
 
 
-class RightScale(object):
+class RightScale(Resource):
 
     def __init__(
             self,
@@ -114,8 +165,8 @@ class RightScale(object):
         :param str path: The path portion of the URL.
             E.g. ``/api``.
         """
+        super(RightScale, self).__init__({}, path)
         self.auth_token = None
-        self.path = path
 
         rc_creds = get_rc_creds()
 
@@ -135,7 +186,6 @@ class RightScale(object):
 
         self._client = HTTPClient(
                 api_endpoint,
-                ROOT_RES_PATH,
                 {'X-API-Version': '1.5'},
                 )
 
@@ -167,29 +217,13 @@ class RightScale(object):
         # only in 1.5 api docs, not discoverable via href
         return self.client.get(HEALTH_CHECK_RES_PATH).json()
 
-    def _resources(self):
-        rs_root = Resource(self.client.root_response)
-        links = rs_root.links
-        for name, action in RS_REST_ACTIONS.iteritems():
-            if action is None:
-                del links[name]
-                continue
-            if name not in links:
-                links[unicode(name)] = unicode('%s/%s' % (self.path, name))
-        return links
-
-    def __dir__(self):
-        return self._resources().keys()
-
-    def __getattr__(self, name):
-        path = self._resources().get(name)
-        if not path:
-            raise AttributeError('%s object has no attribute %s' % (
-                self.__class__.__name__,
-                name,
-                ))
-        actions = RS_DEFAULT_ACTIONS.copy()
-        tpl = RS_REST_ACTIONS.get(name)
-        if tpl:
-            actions.update(tpl)
-        return ResourceCollection(path, self.client, actions)
+    @property
+    def links(self):
+        if not self.soul:
+            try:
+                response = self.client.get(ROOT_RES_PATH)
+                self.response = response
+                self.soul = response.json()
+            except:
+                self.soul = {}
+        return super(RightScale, self).links
