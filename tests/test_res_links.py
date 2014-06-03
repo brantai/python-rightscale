@@ -17,6 +17,7 @@ def test_resource_repr():
             }
     assert r == eval(repr(r))
 
+
 def test_loaded_linky_thing():
     exp = {
             'a': '/path/to/a',
