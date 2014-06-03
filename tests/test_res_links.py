@@ -6,6 +6,17 @@ def test_empty_linky_thing():
     assert {} == linky.links
 
 
+def test_resource_repr():
+    r = Resource()
+    assert r == eval(repr(r))
+
+    r = {
+            'a': '/path/to/a',
+            'mojo': '/somefingelse/blah/blah',
+            'thang': '/thang.thang',
+            }
+    assert r == eval(repr(r))
+
 def test_loaded_linky_thing():
     exp = {
             'a': '/path/to/a',

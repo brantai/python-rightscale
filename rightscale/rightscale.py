@@ -68,6 +68,15 @@ class Resource(object):
         self.soul = soul
         self._links = None
 
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.soul)
+
+    def __str__(self):
+        return str(self.soul)
+
+    def __cmp__(self, other):
+        return cmp(self.soul, other.soul)
+
     @property
     def links(self):
         # only initialize once, not if empty
