@@ -57,9 +57,15 @@ def find_href(obj, rel):
             return l['href']
 
 
-def find_by_name(res, name):
+def find_by_name(collection, name):
+    """
+    :param rightscale.ResourceCollection collection: The collection in which to
+        look for :attr:`name`.
+
+    :param str name: The name to look for in collection.
+    """
     params = {'filter[]': ['name==%s' % name]}
-    found = res.index(params=params)
+    found = collection.index(params=params)
     if len(found) > 1:
         raise ValueError("Found too many matches for %s" % name)
     return found[0]
