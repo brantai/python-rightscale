@@ -51,11 +51,7 @@ def list_instances(deployment_name='', cloud_name='EC2 us-east-1', view='tiny'):
         deploy = find_by_name(api.deployments, deployment_name)
         filters.append('deployment_href==' + deploy.href)
     params = {'filter[]': filters, 'view': view}
-    api_request = cloud.href + '/instances'
-    response = get_api().client.get(api_request, params=params)
-    # TODO: return something more meaningful once we know what format it
-    # comes back in.
-    return response.json()
+    return cloud.instances.index(params=params)
 
 
 def run_script_on_server(script_name, server_name, inputs=None, timeout_s=10):

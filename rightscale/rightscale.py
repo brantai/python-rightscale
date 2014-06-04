@@ -43,11 +43,11 @@ def get_resource_method(name, template):
         obj = response.json()
         if COLLECTION_TYPE in response.content_type:
             ret = HookList(
-                    [Resource(r, path, response) for r in obj],
+                    [Resource(r, path, response, self.client) for r in obj],
                     response=response
                     )
         else:
-            ret = Resource(obj, path, response)
+            ret = Resource(obj, path, response, self.client)
         return ret
     rsr_meth.__name__ = name
     return rsr_meth
@@ -67,13 +67,14 @@ class Resource(object):
         returned by :meth:`HTTPClient.request`.
 
     """
-    def __init__(self, soul=None, path='', response=None):
+    def __init__(self, soul=None, path='', response=None, client=None):
         if soul is None:
             soul = {}
         self.soul = soul
         self.path = path
         self.collection_actions = {}
         self.response = response
+        self.client = client
         self._links = None
 
     def __repr__(self):
@@ -195,6 +196,10 @@ class RightScale(Resource):
         if not self.auth_token:
             self.login()
         return self._client
+
+    @client.setter
+    def client(self, value):
+        self._client = value
 
     def login(self):
         """
