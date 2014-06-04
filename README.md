@@ -79,8 +79,11 @@ To retrieve the list using this library:
 ```python
 users = api.users.index()
 
-# inspect http response headers
-assert 'application/vnd.rightscale.user+json' in users.response.headers['content-type']
+# inspect http response content type
+assert 'application/vnd.rightscale.user+json' in users.response.content_type
+
+# inspect other http response headers
+assert '200 OK' == users.response.headers['status']
 ```
 
 Most actions that act on a specific resource (as opposed to a set of resources) require a resource `id` value.  For example, to get account details, the API documentation describes the [Accounts resource](http://reference.rightscale.com/api1.5/resources/ResourceAccounts.html) as having a `show` action that requires an `id` as the last part of the URL path.  If the account `id` were `12345`, the associated HTTP request would be:
