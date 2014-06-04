@@ -82,7 +82,8 @@ users = api.users.index()
 # inspect http response content type
 assert 'application/vnd.rightscale.user+json' in users.response.content_type
 
-# inspect other http response headers
+# inspect other http response headers (note: contrived example; don't really do
+# this because the library already checks status for you)
 assert '200 OK' == users.response.headers['status']
 ```
 
