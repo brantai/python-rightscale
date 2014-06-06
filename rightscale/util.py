@@ -65,4 +65,6 @@ def find_by_name(collection, name):
     found = collection.index(params=params)
     if len(found) > 1:
         raise ValueError("Found too many matches for %s" % name)
+    elif not found:
+        return None
     return found[0]

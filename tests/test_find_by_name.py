@@ -24,3 +24,13 @@ def test_found_too_many_by_name():
     col = mock.MagicMock()
     col.index.return_value = [1, 2, 3]
     find_by_name(col, 'dummy')
+
+
+def test_find_by_name_returns_none():
+    """
+    find_by_name() should return none for no results
+    """
+    col = mock.MagicMock()
+    col.index.return_value = []
+    ret = find_by_name(col, 'dummy')
+    assert ret is None
