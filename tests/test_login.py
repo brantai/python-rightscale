@@ -6,8 +6,14 @@ from rightscale import RightScale
 
 
 @raises(ValueError)
+def test_empty_api_endpoint():
+    rs = RightScale(refresh_token='not empty', api_endpoint='')
+    rs.login()
+
+
+@raises(ValueError)
 def test_empty_refresh_token():
-    rs = RightScale(refresh_token='')
+    rs = RightScale(refresh_token='', api_endpoint='not empty')
     rs.login()
 
 

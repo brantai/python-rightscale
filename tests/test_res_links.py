@@ -1,3 +1,4 @@
+from nose.tools import raises
 from rightscale.rightscale import Resource
 
 
@@ -48,3 +49,43 @@ def test_allow_customize_links():
     linky = Resource({'links': data})
     linky.links['mojo'] = newmojo
     assert exp == linky.links
+
+
+def test_str_resource():
+    """
+    str(resource) should be based on the soul.
+    """
+    fakey = {'foo': '/foo', 'bar': '/path/to/bar'}
+    res = Resource(soul=fakey)
+    assert str(fakey) == str(res)
+
+
+def test_dir_resource():
+    """
+    dir(resource) should only be based on the embedded links.
+    """
+    fakey = {'foo': '/foo', 'bar': '/path/to/bar'}
+    res = Resource()
+    res._links = fakey
+    assert set(fakey.keys()) == set(dir(res))
+
+
+def test_real_resource_attr():
+    """
+    Resource objects should allow access to attrs named after links.
+    """
+    fakey = {'foo': '/foo', 'bar': '/path/to/bar'}
+    res = Resource()
+    res._links = fakey
+    res.foo
+    res.bar
+
+
+@raises(AttributeError)
+def test_bogus_resource_attr():
+    """
+    Resource objects should complain when trying to access unknown attrs.
+    """
+    fakey = {'foo': '/foo', 'bar': '/path/to/bar'}
+    res = Resource()
+    res.fubar
