@@ -211,8 +211,6 @@ class RightScale(Resource):
             }
         client = self._client
         response = client.post(OAUTH2_RES_PATH, data=login_data)
-        if not response.ok:
-            response.raise_for_status()
 
         raw_token = response.json()
         self.auth_token = "Bearer %s" % raw_token['access_token']
