@@ -1,3 +1,8 @@
 [OAuth]
 api_endpoint=https://my.rightscale.com
 refresh_token=herfderfherfderfherfderf
+
+[Testing]
+safe_script_name = Name of some RightScript
+safe_target_server_name = Ops Test Target
+inputs = Key1:value one,key 2:value2
