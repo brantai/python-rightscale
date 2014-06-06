@@ -9,6 +9,7 @@ __all__ = [
     'get_accounts',
     'list_instances',
     'run_script_on_server',
+    'get_by_path',
     ]
 
 
@@ -106,3 +107,21 @@ def run_script_on_server(
             return
         time.sleep(1)
     output.write('Done waiting. Poll %s for status.\n' % status_path)
+
+
+def get_by_path(path):
+    api = get_api()
+
+    cur_res = api
+    parts = path.split(':')
+    for part in parts:
+        res = getattr(cur_res, part, None)
+        if not res:
+            # probably the name of the res to find
+            res = find_by_name(cur_res, part)
+        cur_res = res
+
+    index = getattr(cur_res, 'index', None)
+    if index:
+        return index()
+    return cur_res
