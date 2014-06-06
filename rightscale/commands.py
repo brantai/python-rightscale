@@ -1,3 +1,4 @@
+import sys
 import time
 from .rightscale import RightScale as _RS
 from .util import find_by_name
@@ -54,7 +55,13 @@ def list_instances(deployment_name='', cloud_name='EC2 us-east-1', view='tiny'):
     return cloud.instances.index(params=params)
 
 
-def run_script_on_server(script_name, server_name, inputs=None, timeout_s=10):
+def run_script_on_server(
+        script_name,
+        server_name,
+        inputs=None,
+        timeout_s=10,
+        output=sys.stdout
+        ):
     """
     Runs a RightScript and polls for status.
 
@@ -75,6 +82,8 @@ def run_script_on_server(script_name, server_name, inputs=None, timeout_s=10):
         status: RightScript: 'my cool bob lol script'
         status: completed: my cool bob lol script
 
+    Defaults to printing status message to stdout, but will accept any object
+    that implements ``write()`` passed in to :attr:`output`.
     """
     api = get_api()
     script = find_by_name(api.right_scripts, script_name)
@@ -92,8 +101,8 @@ def run_script_on_server(script_name, server_name, inputs=None, timeout_s=10):
     for i in range(timeout_s):
         status = api.client.get(status_path).json()
         summary = status.get('summary', '')
-        print 'status: %s' % summary
+        output.write('status: %s\n' % summary)
         if summary.startswith('completed'):
             return
         time.sleep(1)
-    print 'Done waiting. Poll %s for status.' % status_path
+    output.write('Done waiting. Poll %s for status.\n' % status_path)
