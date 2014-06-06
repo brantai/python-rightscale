@@ -105,7 +105,6 @@ class Resource(object):
         # only initialize once, not if empty
         if self._links is None:
             _links = self._get_rel_hrefs()
-            _links.pop('self', '')
 
             collection_actions = COLLECTIONS.get(self.content_type, {})
             self.collection_actions = collection_actions
