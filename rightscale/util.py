@@ -54,16 +54,22 @@ def get_rc_creds():
         return ('', '')
 
 
-def find_by_name(collection, name):
+def find_by_name(collection, name, first=False):
     """
     :param rightscale.ResourceCollection collection: The collection in which to
         look for :attr:`name`.
 
     :param str name: The name to look for in collection.
+
+    :param bool first: Normally, if the search for :attr:`name` returns
+        multiple results, this raises a :class:`ValueError`.  However, if
+        :attr:`first` is ``True``, then the first result is returned and no
+        exception is raised.
+
     """
     params = {'filter[]': ['name==%s' % name]}
     found = collection.index(params=params)
-    if len(found) > 1:
+    if not first and len(found) > 1:
         raise ValueError("Found too many matches for %s" % name)
     elif not found:
         return None

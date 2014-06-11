@@ -34,3 +34,14 @@ def test_find_by_name_returns_none():
     col.index.return_value = []
     ret = find_by_name(col, 'dummy')
     assert ret is None
+
+
+def test_return_first_of_multiple_by_name():
+    """
+    find_by_name() should return first item of multiple when demanded
+    """
+    first = 1
+    col = mock.MagicMock()
+    col.index.return_value = [first, 2, 3]
+    ret = find_by_name(col, 'dummy', first=True)
+    assert first == ret

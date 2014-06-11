@@ -109,7 +109,20 @@ def run_script_on_server(
     output.write('Done waiting. Poll %s for status.\n' % status_path)
 
 
-def get_by_path(path):
+def get_by_path(path, first=False):
+    """
+    Search for resources using colon-separated path notation.
+
+    E.g.::
+
+        path = 'deployments:production:servers:haproxy'
+        haproxies = get_by_path(path)
+
+    :param bool first: Always use the first returned match for all intermediate
+        searches along the path.  If this is ``False`` and an intermediate
+        search returns multiple hits, an exception is raised.
+
+    """
     api = get_api()
 
     cur_res = api
@@ -118,7 +131,7 @@ def get_by_path(path):
         res = getattr(cur_res, part, None)
         if not res:
             # probably the name of the res to find
-            res = find_by_name(cur_res, part)
+            res = find_by_name(cur_res, part, first)
         cur_res = res
 
     index = getattr(cur_res, 'index', None)
