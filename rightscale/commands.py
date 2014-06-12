@@ -31,7 +31,7 @@ def get_accounts():
     return api.sessions.accounts()
 
 
-def list_instances(deployment_name='', cloud_name='EC2 us-east-1', view='tiny'):
+def list_instances(deployment_name='', cloud_name='us-east-1', view='tiny'):
     """
     Returns a list of instances from your account.
 
