@@ -31,7 +31,11 @@ def get_accounts():
     return api.sessions.accounts()
 
 
-def list_instances(deployment_name='', cloud_name='us-east-1', view='tiny'):
+def list_instances(
+        deployment_name='',
+        cloud_name='EC2 us-east-1',
+        view='tiny',
+        ):
     """
     Returns a list of instances from your account.
 
@@ -131,7 +135,7 @@ def get_by_path(path, first=False):
         res = getattr(cur_res, part, None)
         if not res:
             # probably the name of the res to find
-            res = find_by_name(cur_res, part, first)
+            res = find_by_name(cur_res, part)
         cur_res = res
 
     index = getattr(cur_res, 'index', None)

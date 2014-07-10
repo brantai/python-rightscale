@@ -11,5 +11,5 @@ def test_list_all_instances_tiny():
 
 @attr('rc_creds', 'real_conn')
 def test_list_some_instances_tiny():
-    some_instances = list_instances(deployment_name='production')
+    some_instances = list_instances(deployment_name='Production')
     print "Got %d instances" % len(some_instances)

@@ -54,23 +54,30 @@ def get_rc_creds():
         return ('', '')
 
 
-def find_by_name(collection, name, first=False):
+def find_by_name(collection, name, exact=True):
     """
+    Searches collection by resource name.
+
     :param rightscale.ResourceCollection collection: The collection in which to
         look for :attr:`name`.
 
     :param str name: The name to look for in collection.
 
-    :param bool first: Normally, if the search for :attr:`name` returns
-        multiple results, this raises a :class:`ValueError`.  However, if
-        :attr:`first` is ``True``, then the first result is returned and no
-        exception is raised.
+    :param bool exact: A RightScale ``index`` search with a :attr:`name` filter
+        can return multiple results because it does a substring match on
+        resource names.  So any resource that contains the specified name will
+        be returned.  The :attr:`exact` flag controls whether to attempt to
+        find an exact match for the given name.  If :attr:`exact` is ``False``,
+        this will return a list of all the matches.  The default behaviour is
+        to perform an exact match and return a single result.
+
+    Returns ``None`` if no resources are found with a matching name.
 
     """
     params = {'filter[]': ['name==%s' % name]}
     found = collection.index(params=params)
-    if not first and len(found) > 1:
-        raise ValueError("Found too many matches for %s" % name)
-    elif not found:
-        return None
-    return found[0]
+    if not exact and len(found) > 1:
+        return found
+    for f in found:
+        if f.soul['name'] == name:
+            return f
