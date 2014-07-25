@@ -1,14 +1,16 @@
 try:
-	from setuptools import setup
+    from setuptools import setup
 except:
-        from distutils.core import setup
+    from distutils.core import setup
+
+from rightscale import VERSION
 
 packages = ['rightscale']
 requires = ['requests']
 
 
 setup(name='python-rightscale',
-      version='0.1.0',
+      version=VERSION,
       description='Python wrapper for the Rightscale API',
       author='Brent Naylor',
       author_email='brantai@gmail.com',
@@ -17,4 +19,4 @@ setup(name='python-rightscale',
       url='https://github.com/brantai/python-rightscale',
       packages=packages,
       install_requires=requires,
-     )
+      )
