@@ -41,7 +41,7 @@ class HTTPClient(object):
             extra_headers=None,
             ):
         self.endpoint = endpoint
-        s = requests.Session()
+        s = requests.session()
         s.headers['Accept'] = 'application/json'
         if extra_headers:
             s.headers.update(extra_headers)
