@@ -40,7 +40,17 @@ def get_resource_method(name, template):
         else:
             path = self.path
         response = self.client.request(http_method, path, **kwargs)
+
+        # If the returned code is a 201, then there should be a location
+        # header in the response that we can use to re-get the newly created
+        # resource.
+        if response.status_code == 201:
+            loc = response.headers.get('location')
+            response = self.client.request('get', loc, **kwargs)
+
+        # At this point, we better have a valid JSON response object
         obj = response.json()
+
         if COLLECTION_TYPE in response.content_type:
             ret = HookList(
                     [Resource(r, path, response, self.client) for r in obj],
@@ -49,6 +59,7 @@ def get_resource_method(name, template):
         else:
             ret = Resource(obj, path, response, self.client)
         return ret
+
     rsr_meth.__name__ = name
     return rsr_meth
 
