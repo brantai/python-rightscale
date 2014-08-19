@@ -47,6 +47,10 @@ def get_resource_method(name, template):
             # resource.
             loc = response.headers.get('location')
             response = self.client.request('get', loc, **kwargs)
+        elif response.status_code == 202:
+            # This means that the action was accepted, but there is no
+            # return data to parse.
+            return
         elif response.status_code == 204:
             # If the returned code is a 204, then we know the action was
             # completed but there is no data to parse.
