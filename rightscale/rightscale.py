@@ -41,20 +41,14 @@ def get_resource_method(name, template):
             path = self.path
         response = self.client.request(http_method, path, **kwargs)
 
-        if response.status_code == 201:
+        loc = response.headers.get('location', None)
+
+        if loc:
             # If the returned code is a 201, then there should be a location
             # header in the response that we can use to re-get the newly created
             # resource.
             loc = response.headers.get('location')
             response = self.client.request('get', loc, **kwargs)
-        elif response.status_code == 202:
-            # This means that the action was accepted, but there is no
-            # return data to parse.
-            return
-        elif response.status_code == 204:
-            # If the returned code is a 204, then we know the action was
-            # completed but there is no data to parse.
-            return
 
         # At this point, we better have a valid JSON response object
         obj = response.json()
