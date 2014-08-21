@@ -72,8 +72,8 @@ def run_script_on_server(
 
     Sample usage::
 
-        rs = RightScale()
-        rs.run_script_on_server(
+        from rightscale import run_script_on_server
+        run_script_on_server(
                 'my cool bob lol script',
                 'some server',
                 inputs={'BOB': 'blah blah', 'LOL': 'fubar'},
