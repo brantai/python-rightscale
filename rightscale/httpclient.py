@@ -2,6 +2,7 @@ from functools import partial
 import requests
 
 
+
 DEFAULT_ROOT_RES_PATH = '/'
 
 
@@ -41,8 +42,13 @@ class HTTPClient(object):
             extra_headers=None,
             ):
         self.endpoint = endpoint
+
         s = requests.session()
+
+        # Disable keepalives. They're unsafe in threaded apps that potentially
+        # re-use very old connection objects from the urllib3 connection pool.
         s.headers['Accept'] = 'application/json'
+        s.headers['Connection'] = 'close'
         if extra_headers:
             s.headers.update(extra_headers)
         self.s = s
