@@ -4,7 +4,6 @@ Python-Rightscale
 A stupid wrapper around rightscale's HTTP API
 """
 import types
-import simplejson
 from .actions import RS_DEFAULT_ACTIONS, COLLECTIONS
 from .httpclient import HTTPClient
 from .util import get_rc_creds, HookList
@@ -54,7 +53,7 @@ def get_resource_method(name, template):
         # At this point, we better have a valid JSON response object
         try:
             obj = response.json()
-        except simplejson.scanner.JSONDecodeError:
+        except:
             # The response had no JSON ... not a resource object
             return
 
