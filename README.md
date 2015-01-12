@@ -28,11 +28,11 @@ api = rightscale.RightScale()
 
 Here are some examples of some common high-level operations for which functions have been implemented in this library:
 
-- List all instances in `us-east-1`:
+- List all instances in `EC2 us-east-1`:
 
   ```python
   from rightscale import list_instances
-  use1_instances = list_instances(cloud_name='us-east-1')
+  use1_instances = list_instances(cloud_name='EC2 us-east-1')
   ```
 
   Upon success, `use1_instances` will contain a list of dict objects representing the tiny view of each instance as returned by the RightScale API.
