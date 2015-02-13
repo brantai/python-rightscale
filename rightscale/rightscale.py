@@ -3,6 +3,7 @@ Python-Rightscale
 
 A stupid wrapper around rightscale's HTTP API
 """
+import time
 import types
 from .actions import RS_DEFAULT_ACTIONS, COLLECTIONS
 from .httpclient import HTTPClient
@@ -184,6 +185,7 @@ class RightScale(Resource):
         """
         super(RightScale, self).__init__({}, path)
         self.auth_token = None
+        self.auth_expires_at = 0
 
         rc_creds = get_rc_creds()
 
@@ -208,9 +210,15 @@ class RightScale(Resource):
 
     @property
     def client(self):
+        # Validate that the auth_expires_at time hasn't been reached. If it is,
+        # the token is invalid and needs to be re-generated.
+        if time.time() > self.auth_expires_at:
+            self.auth_token = None
+
         # lazy login so you can create instances without triggering a net hit
         if not self.auth_token:
             self.login()
+
         return self._client
 
     @client.setter
@@ -231,6 +239,12 @@ class RightScale(Resource):
         raw_token = response.json()
         self.auth_token = "Bearer %s" % raw_token['access_token']
         client.s.headers['Authorization'] = self.auth_token
+
+        # Generate an expiration time for our token of 60-seconds before the
+        # standard time returned by RightScale. This will be used in the
+        # self.client property to validate that our token is still usable on
+        # every API call.
+        self.auth_expires_at = time.time() + int(raw_token['expires_in']) - 60
 
     def health_check(self):
         # only in 1.5 api docs, not discoverable via href
