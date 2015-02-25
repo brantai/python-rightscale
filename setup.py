@@ -15,6 +15,5 @@ setup(name='python-rightscale',
       package_dir={'rightscale': 'rightscale'},
       url='https://github.com/brantai/python-rightscale',
       packages=packages,
-      setup_requires=open('requirements.txt').readlines(),
       install_requires=open('requirements.txt').readlines()
       )
