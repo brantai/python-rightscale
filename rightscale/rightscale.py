@@ -3,7 +3,6 @@ Python-Rightscale
 
 A stupid wrapper around rightscale's HTTP API
 """
-import time
 import types
 from .actions import RS_DEFAULT_ACTIONS, COLLECTIONS
 from .httpclient import HTTPClient
@@ -49,7 +48,7 @@ def get_resource_method(name, template):
             # header in the response that we can use to re-get the newly created
             # resource.
             loc = response.headers.get('location')
-            response = self.client.request('get', loc, **kwargs)
+            response = self.client.get(loc, **kwargs)
 
         # At this point, we better have a valid JSON response object
         try:
@@ -185,7 +184,6 @@ class RightScale(Resource):
         """
         super(RightScale, self).__init__({}, path)
         self.auth_token = None
-        self.auth_expires_at = 0
 
         rc_creds = get_rc_creds()
 
@@ -201,50 +199,13 @@ class RightScale(Resource):
             refresh_token = rc_creds[1]
         if not refresh_token:
             raise ValueError("Can't login. Need refresh token!")
-        self.refresh_token = refresh_token
 
-        self._client = HTTPClient(
+        self.client = HTTPClient(
                 api_endpoint,
                 {'X-API-Version': '1.5'},
+                OAUTH2_RES_PATH,
+                refresh_token,
                 )
-
-    @property
-    def client(self):
-        # Validate that the auth_expires_at time hasn't been reached. If it is,
-        # the token is invalid and needs to be re-generated.
-        if time.time() > self.auth_expires_at:
-            self.auth_token = None
-
-        # lazy login so you can create instances without triggering a net hit
-        if not self.auth_token:
-            self.login()
-
-        return self._client
-
-    @client.setter
-    def client(self, value):
-        self._client = value
-
-    def login(self):
-        """
-        Gets and stores an OAUTH token from Rightscale.
-        """
-        login_data = {
-            'grant_type': 'refresh_token',
-            'refresh_token': self.refresh_token,
-            }
-        client = self._client
-        response = client.post(OAUTH2_RES_PATH, data=login_data)
-
-        raw_token = response.json()
-        self.auth_token = "Bearer %s" % raw_token['access_token']
-        client.s.headers['Authorization'] = self.auth_token
-
-        # Generate an expiration time for our token of 60-seconds before the
-        # standard time returned by RightScale. This will be used in the
-        # self.client property to validate that our token is still usable on
-        # every API call.
-        self.auth_expires_at = time.time() + int(raw_token['expires_in']) - 60
 
     def health_check(self):
         # only in 1.5 api docs, not discoverable via href
